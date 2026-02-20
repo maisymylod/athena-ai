@@ -606,10 +606,12 @@
     <div class="section-label">Early Access</div>
     <h2>Be the first to be protected</h2>
     <p>Join the waitlist for early access. Free for victims. Always.</p>
-    <div class="waitlist-form">
-      <input type="email" placeholder="Enter your email" aria-label="Email address">
-      <button class="btn btn-primary" onclick="handleWaitlist()">Join Waitlist</button>
-    </div>
+    <form action="https://formspree.io/f/mykddoao" method="POST" class="waitlist-form" id="waitlist-form">
+      <input type="email" name="email" placeholder="Enter your email" aria-label="Email address" required autocomplete="email">
+      <button type="submit" class="btn btn-primary">Join Waitlist</button>
+      <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
+      <input type="hidden" name="_subject" value="Athena AI waitlist signup">
+    </form>
     <p id="waitlist-msg" style="margin-top: 16px; font-size: 0.85rem; color: var(--purple-light); display: none;"></p>
   </section>
 
@@ -619,20 +621,42 @@
   </footer>
 
   <script>
-    function handleWaitlist() {
-      const input = document.querySelector('.waitlist-form input');
+    // Formspree AJAX submission (stay on page)
+    document.getElementById('waitlist-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
       const msg = document.getElementById('waitlist-msg');
-      const email = input.value.trim();
-      if (email && email.includes('@')) {
-        msg.textContent = `Thanks! ${email} has been added to the waitlist.`;
-        msg.style.display = 'block';
-        input.value = '';
-      } else {
-        msg.textContent = 'Please enter a valid email address.';
-        msg.style.display = 'block';
+      const email = form.querySelector('input[name="email"]').value;
+      const btn = form.querySelector('button');
+
+      btn.textContent = 'Joining...';
+      btn.disabled = true;
+
+      try {
+        const resp = await fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'Accept': 'application/json' }
+        });
+        if (resp.ok) {
+          msg.textContent = `You're in! ${email} has been added to the waitlist.`;
+          msg.style.color = 'var(--purple-light)';
+          msg.style.display = 'block';
+          form.reset();
+        } else {
+          msg.textContent = 'Something went wrong. Please try again.';
+          msg.style.color = '#F87171';
+          msg.style.display = 'block';
+        }
+      } catch (err) {
+        msg.textContent = 'Network error. Please try again.';
         msg.style.color = '#F87171';
+        msg.style.display = 'block';
       }
-    }
+
+      btn.textContent = 'Join Waitlist';
+      btn.disabled = false;
+    });
 
     // Intersection Observer for fade-in animations
     const observer = new IntersectionObserver((entries) => {
