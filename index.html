@@ -626,25 +626,33 @@
       e.preventDefault();
       const form = e.target;
       const msg = document.getElementById('waitlist-msg');
-      const email = form.querySelector('input[name="email"]').value;
+      const emailInput = form.querySelector('input[name="email"]');
+      const email = emailInput.value.trim();
       const btn = form.querySelector('button');
 
       btn.textContent = 'Joining...';
       btn.disabled = true;
 
       try {
-        const resp = await fetch(form.action, {
+        const resp = await fetch('https://formspree.io/f/mykddoao', {
           method: 'POST',
-          body: new FormData(form),
-          headers: { 'Accept': 'application/json' }
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            email: email,
+            _subject: 'Athena AI waitlist signup'
+          })
         });
+        const data = await resp.json();
         if (resp.ok) {
           msg.textContent = `You're in! ${email} has been added to the waitlist.`;
           msg.style.color = 'var(--purple-light)';
           msg.style.display = 'block';
           form.reset();
         } else {
-          msg.textContent = 'Something went wrong. Please try again.';
+          msg.textContent = data.error || 'Something went wrong. Please try again.';
           msg.style.color = '#F87171';
           msg.style.display = 'block';
         }
