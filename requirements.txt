@@ -1,0 +1,4 @@
+pillow>=10.0
+imagehash>=4.3
+requests>=2.31
+beautifulsoup4>=4.12
