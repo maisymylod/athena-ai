@@ -606,11 +606,30 @@
     <div class="section-label">Early Access</div>
     <h2>Be the first to be protected</h2>
     <p>Join the waitlist for early access. Free for victims. Always.</p>
-    <div class="waitlist-form">
-      <input type="email" placeholder="Enter your email" aria-label="Email address">
-      <button class="btn btn-primary" onclick="handleWaitlist()">Join Waitlist</button>
-    </div>
-    <p id="waitlist-msg" style="margin-top: 16px; font-size: 0.85rem; color: var(--purple-light); display: none;"></p>
+    <form class="waitlist-form" id="waitlist-form" action="https://formspree.io/f/mykddoao" method="POST">
+      <input
+        type="email"
+        name="email"
+        placeholder="Enter your email"
+        aria-label="Email address"
+        required
+        autocomplete="email"
+      >
+      <button class="btn btn-primary" type="submit">Join Waitlist</button>
+
+      <!-- Spam honeypot -->
+      <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
+
+      <!-- Email subject -->
+      <input type="hidden" name="_subject" value="Athena AI waitlist signup">
+    </form>
+
+    <p id="waitlist-success" style="margin-top: 16px; font-size: 0.85rem; color: var(--purple-light); display: none;">
+      You’re in — thanks for signing up.
+    </p>
+    <p id="waitlist-error" style="margin-top: 16px; font-size: 0.85rem; color: #F87171; display: none;">
+      Something went wrong — please try again.
+    </p>
   </section>
 
   <!-- FOOTER -->
@@ -619,12 +638,39 @@
   </footer>
 
   <script>
-    function handleWaitlist() {
-      const input = document.querySelector('.waitlist-form input');
-      const msg = document.getElementById('waitlist-msg');
-      const email = input.value.trim();
-      if (email && email.includes('@')) {
-        msg.textContent = `Thanks! ${email} has been added to the waitlist.`;
+    // Formspree waitlist submission (keeps users on this page)
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.getElementById('waitlist-form');
+      const ok = document.getElementById('waitlist-success');
+      const err = document.getElementById('waitlist-error');
+
+      if (!form) return;
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (ok) ok.style.display = 'none';
+        if (err) err.style.display = 'none';
+
+        try {
+          const res = await fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { 'Accept': 'application/json' }
+          });
+
+          if (res.ok) {
+            form.reset();
+            if (ok) ok.style.display = 'block';
+          } else {
+            if (err) err.style.display = 'block';
+          }
+        } catch (e) {
+          if (err) err.style.display = 'block';
+        }
+      });
+    });
+
+has been added to the waitlist.`;
         msg.style.display = 'block';
         input.value = '';
       } else {
