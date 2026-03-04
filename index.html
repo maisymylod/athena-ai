@@ -395,6 +395,156 @@
       line-height: 1.65;
     }
 
+    /* ===== DETECT SECTION ===== */
+    .detect-section {
+      text-align: center;
+    }
+
+    .drop-zone {
+      position: relative;
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 64px 32px;
+      border: 2px dashed rgba(147, 51, 234, 0.35);
+      border-radius: 20px;
+      background: rgba(19, 17, 28, 0.6);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--purple-bright);
+      background: rgba(147, 51, 234, 0.05);
+      transform: translateY(-2px);
+    }
+
+    .drop-zone-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(147, 51, 234, 0.1);
+      border: 1px solid rgba(147, 51, 234, 0.2);
+      border-radius: 16px;
+    }
+
+    .drop-zone h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    .drop-zone p {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      font-weight: 300;
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .detect-result {
+      display: none;
+      max-width: 560px;
+      margin: 24px auto 0;
+      padding: 24px 32px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      text-align: left;
+    }
+
+    .detect-result.visible { display: block; }
+
+    .detect-result-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .detect-result-label {
+      font-weight: 600;
+      font-size: 1.05rem;
+    }
+
+    .detect-result-label.synthetic { color: #F87171; }
+    .detect-result-label.real { color: #34D399; }
+
+    .detect-confidence-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .detect-confidence-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+
+    .detect-confidence-fill.synthetic {
+      background: linear-gradient(90deg, #F87171, #EF4444);
+    }
+
+    .detect-confidence-fill.real {
+      background: linear-gradient(90deg, #34D399, #10B981);
+    }
+
+    .detect-indicators {
+      list-style: none;
+      padding: 0;
+    }
+
+    .detect-indicators li {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      padding: 4px 0;
+      padding-left: 16px;
+      position: relative;
+    }
+
+    .detect-indicators li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--purple-light);
+    }
+
+    .detect-loading {
+      display: none;
+      text-align: center;
+      padding: 24px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .detect-loading.visible { display: block; }
+
+    .detect-error {
+      display: none;
+      max-width: 560px;
+      margin: 16px auto 0;
+      padding: 16px 24px;
+      border-radius: 12px;
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px solid rgba(248, 113, 113, 0.2);
+      color: #F87171;
+      font-size: 0.88rem;
+    }
+
+    .detect-error.visible { display: block; }
+
     /* ===== CTA ===== */
     .cta-section {
       text-align: center;
@@ -601,6 +751,33 @@
     </div>
   </section>
 
+  <!-- DETECT -->
+  <section class="detect-section" id="detect">
+    <div class="section-label">Try It Now</div>
+    <h2 class="section-title">Is this image AI-generated?</h2>
+    <p class="section-subtitle" style="margin: 0 auto 40px;">Drop an image below and Athena's ML model will analyze it for synthetic generation artifacts.</p>
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/bmp,image/tiff">
+      <div class="drop-zone-icon">
+        <svg width="24" height="24" fill="none" stroke="var(--purple-light)" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      </div>
+      <h3>Drag & drop an image here</h3>
+      <p>or click to browse — JPG, PNG, WebP (max 16 MB)</p>
+    </div>
+    <div class="detect-loading" id="detect-loading">Analyzing image...</div>
+    <div class="detect-error" id="detect-error"></div>
+    <div class="detect-result" id="detect-result">
+      <div class="detect-result-header">
+        <span class="detect-result-label" id="detect-label"></span>
+        <span style="color: var(--text-muted); font-size: 0.85rem;" id="detect-confidence-text"></span>
+      </div>
+      <div class="detect-confidence-bar">
+        <div class="detect-confidence-fill" id="detect-confidence-fill"></div>
+      </div>
+      <ul class="detect-indicators" id="detect-indicators"></ul>
+    </div>
+  </section>
+
   <!-- CTA -->
   <section class="cta-section" id="waitlist">
     <div class="section-label">Early Access</div>
@@ -675,6 +852,100 @@
         }
       });
     }, { threshold: 0.1 });
+
+    // Drag-and-drop detection
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const loading = document.getElementById('detect-loading');
+    const errorEl = document.getElementById('detect-error');
+    const resultEl = document.getElementById('detect-result');
+
+    function hideResults() {
+      loading.classList.remove('visible');
+      errorEl.classList.remove('visible');
+      resultEl.classList.remove('visible');
+    }
+
+    function showError(msg) {
+      hideResults();
+      errorEl.textContent = msg;
+      errorEl.classList.add('visible');
+    }
+
+    function showResult(data) {
+      hideResults();
+      const label = document.getElementById('detect-label');
+      const confText = document.getElementById('detect-confidence-text');
+      const confFill = document.getElementById('detect-confidence-fill');
+      const indicators = document.getElementById('detect-indicators');
+
+      const isSynthetic = data.is_synthetic;
+      const confidence = Math.round(data.confidence * 100);
+
+      label.textContent = data.label;
+      label.className = 'detect-result-label ' + (isSynthetic ? 'synthetic' : 'real');
+      confText.textContent = confidence + '% confidence';
+
+      confFill.style.width = confidence + '%';
+      confFill.className = 'detect-confidence-fill ' + (isSynthetic ? 'synthetic' : 'real');
+
+      indicators.innerHTML = '';
+      (data.indicators || []).forEach(function(ind) {
+        const li = document.createElement('li');
+        li.textContent = ind;
+        indicators.appendChild(li);
+      });
+
+      resultEl.classList.add('visible');
+    }
+
+    async function analyzeFile(file) {
+      if (!file || !file.type.startsWith('image/')) {
+        showError('Please select a valid image file.');
+        return;
+      }
+      if (file.size > 16 * 1024 * 1024) {
+        showError('File too large. Maximum size is 16 MB.');
+        return;
+      }
+
+      hideResults();
+      loading.classList.add('visible');
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const resp = await fetch('/api/detect', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (!resp.ok) {
+          showError(data.error || 'Detection failed. Please try again.');
+          return;
+        }
+        showResult(data);
+      } catch (err) {
+        showError('Could not connect to the detection server.');
+      }
+    }
+
+    dropZone.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', function() {
+      dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      if (e.dataTransfer.files.length > 0) analyzeFile(e.dataTransfer.files[0]);
+    });
+
+    fileInput.addEventListener('change', function() {
+      if (fileInput.files.length > 0) analyzeFile(fileInput.files[0]);
+    });
 
     document.querySelectorAll('.feature-card, .stat, .step, .crisis').forEach(el => {
       el.style.opacity = '0';
