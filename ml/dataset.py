@@ -5,6 +5,7 @@ import logging
 import random
 from pathlib import Path
 
+import torch
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -89,7 +90,7 @@ class DeepfakeDataset(Dataset):
 
     def __getitem__(self, idx: int) -> tuple:
         img = Image.open(self.image_paths[idx]).convert("RGB")
-        label = float(self.labels[idx])
+        label = torch.tensor(self.labels[idx], dtype=torch.float32)
 
         if self.transform:
             img = self.transform(img)

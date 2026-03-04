@@ -71,7 +71,8 @@ class TestDeepfakeDataset:
         img, label = ds[0]
         assert isinstance(img, torch.Tensor)
         assert img.shape == (3, 64, 64)
-        assert isinstance(label, float)
+        assert isinstance(label, torch.Tensor)
+        assert label.dtype == torch.float32
 
     def test_length(self, dummy_image_dir: Path):
         paths, labels = load_image_paths(dummy_image_dir)
