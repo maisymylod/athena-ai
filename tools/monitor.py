@@ -138,8 +138,9 @@ class PerceptualHasher:
 class SyntheticDetector:
     """Analyze images for synthetic generation indicators.
 
-    Current version uses metadata heuristics. Production version
-    will use a fine-tuned ConvNeXt model.
+    Uses a trained ML model as the primary detector, with metadata
+    heuristics as supplementary signals. Falls back to heuristics-only
+    if no trained model is available.
     """
 
     # Known AI generation tool signatures in EXIF/metadata
@@ -163,16 +164,70 @@ class SyntheticDetector:
         "tensorflow",
     ]
 
+    _ml_inference = None
+    _ml_load_attempted = False
+
     @classmethod
-    def analyze(cls, metadata: dict) -> tuple[bool, list[str]]:
-        """Analyze image metadata for synthetic generation indicators.
+    def _get_ml_inference(cls):
+        """Lazy-load the ML inference model. Returns None if unavailable."""
+        if cls._ml_load_attempted:
+            return cls._ml_inference
+
+        cls._ml_load_attempted = True
+        try:
+            from ml.inference import DeepfakeInference
+            checkpoint_path = Path("checkpoints/best_model.pt")
+            if checkpoint_path.exists():
+                cls._ml_inference = DeepfakeInference.from_checkpoint(checkpoint_path)
+        except Exception:
+            pass  # ML model not available — fall back to heuristics
+
+        return cls._ml_inference
+
+    @classmethod
+    def analyze(cls, metadata: dict, image_path: str | None = None) -> tuple[bool, list[str]]:
+        """Analyze an image for synthetic generation indicators.
+
+        Uses the ML model as the primary signal when available, with
+        metadata heuristics as supplementary indicators. Falls back to
+        heuristics-only if no trained model is loaded.
 
         Args:
             metadata: Dict of image metadata (EXIF, XMP, etc.)
+            image_path: Optional path to the image file for ML inference.
 
         Returns:
             Tuple of (is_synthetic, list of indicators found)
         """
+        indicators = []
+        ml_result = None
+
+        # Primary: ML model inference
+        if image_path:
+            inference = cls._get_ml_inference()
+            if inference:
+                try:
+                    is_synthetic_ml, confidence, ml_indicators = inference.predict(image_path)
+                    indicators.extend(ml_indicators)
+                    ml_result = is_synthetic_ml
+                except Exception:
+                    pass  # Fall through to heuristics
+
+        # Supplementary: Metadata heuristics
+        heuristic_indicators = cls._analyze_metadata(metadata)
+        indicators.extend(heuristic_indicators)
+
+        # Decision: ML result is authoritative if available
+        if ml_result is not None:
+            is_synthetic = ml_result
+        else:
+            is_synthetic = len(heuristic_indicators) >= 2
+
+        return is_synthetic, indicators
+
+    @classmethod
+    def _analyze_metadata(cls, metadata: dict) -> list[str]:
+        """Analyze image metadata for synthetic generation indicators."""
         indicators = []
 
         # Check software field
@@ -207,8 +262,7 @@ class SyntheticDetector:
             if width % 64 == 0 and height % 64 == 0 and width >= 512:
                 indicators.append(f"Resolution {width}x{height} matches AI generation pattern")
 
-        is_synthetic = len(indicators) >= 2
-        return is_synthetic, indicators
+        return indicators
 
 
 class TakedownGenerator:
