@@ -1,1 +1,1 @@
-"""Athena server — Flask API for deepfake detection."""
+"""Athena server, Flask API for deepfake detection."""

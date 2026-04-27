@@ -1,8 +1,8 @@
 """Pull a public real-vs-AI image dataset from HuggingFace and lay it out
 under data/raw/{real,synthetic}/ so the existing Trainer can consume it.
 
-Default dataset: Madushan996/real_fake_images — separate `real/` and
-`fake_fx/` directories of PNGs, no auth required, ~1000 of each.
+Default dataset: Madushan996/real_fake_images. Has separate `real/`
+and `fake_fx/` directories of PNGs, no auth required.
 
 Also extracts a small held-out sample for the landing-page "Try with these"
 example tiles, so the demo shows the model on test images it has never
@@ -73,8 +73,8 @@ def prepare(
     logger.info("Listing files in %s …", repo)
     real_files = sorted(_list_files(api, repo, real_prefix))[:real_limit]
 
-    # Pull `per_synth_prefix_limit` from each synthetic source — gives the model
-    # exposure to multiple generators rather than overfitting to one.
+    # Pull `per_synth_prefix_limit` from each synthetic source. This gives the
+    # model exposure to multiple generators rather than overfitting to one.
     synth_files: list[str] = []
     for pfx in synth_prefixes:
         items = sorted(_list_files(api, repo, pfx))[:per_synth_prefix_limit]
@@ -86,7 +86,7 @@ def prepare(
 
     if not real_files or not synth_files:
         logger.error(
-            "Empty file list for one class — check prefixes. real=%d synth=%d",
+            "Empty file list for one class. Check prefixes. real=%d synth=%d",
             len(real_files), len(synth_files),
         )
         sys.exit(1)

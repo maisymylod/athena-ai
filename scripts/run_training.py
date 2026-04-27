@@ -14,7 +14,7 @@ from ml.train import Trainer
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Athena — Train deepfake detection model"
+        description="Athena, Train deepfake detection model"
     )
     parser.add_argument(
         "--data-dir",
@@ -60,7 +60,7 @@ def main() -> None:
     )
 
     print("=" * 60)
-    print("  ATHENA — Deepfake Detection Model Training")
+    print("  ATHENA, Deepfake Detection Model Training")
     print("=" * 60)
     print(f"  Data:       {config.data_dir}")
     print(f"  Output:     {config.output_dir}")

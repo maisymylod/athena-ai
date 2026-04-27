@@ -36,7 +36,7 @@ DATASETS = {
 def print_instructions(dataset_key: str | None = None) -> None:
     """Print download instructions for available datasets."""
     print("=" * 60)
-    print("  ATHENA — Dataset Download Instructions")
+    print("  ATHENA, Dataset Download Instructions")
     print("=" * 60)
     print()
     print("Prerequisites:")
@@ -57,8 +57,8 @@ def print_instructions(dataset_key: str | None = None) -> None:
         print()
 
     print("After downloading, organize files into:")
-    print("  data/raw/real/      — real images")
-    print("  data/raw/synthetic/ — AI-generated images")
+    print("  data/raw/real/     , real images")
+    print("  data/raw/synthetic/, AI-generated images")
     print()
     print("Example:")
     print("  mkdir -p data/raw/real data/raw/synthetic")

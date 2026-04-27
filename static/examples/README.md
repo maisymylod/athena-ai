@@ -5,8 +5,8 @@ They are held-out test samples from
 [Madushan996/real_fake_images](https://huggingface.co/datasets/Madushan996/real_fake_images),
 the same dataset whose training portion was used to fine-tune the classifier.
 
-- `real_1.jpg`, `real_2.jpg`, `real_3.jpg` — real photos
-- `ai_1.jpg`, `ai_2.jpg`, `ai_3.jpg` — AI-generated images, one each from
+- `real_1.jpg`, `real_2.jpg`, `real_3.jpg`: real photos
+- `ai_1.jpg`, `ai_2.jpg`, `ai_3.jpg`: AI-generated images, one each from
   three different generators (Flux, Stable Diffusion 1.5, plus one more)
 
 To regenerate them (e.g. to pick a different held-out sample, or after

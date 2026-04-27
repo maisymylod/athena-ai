@@ -1,4 +1,4 @@
-# Model Card — Athena Synthetic-Image Classifier
+# Model Card · Athena Synthetic-Image Classifier
 
 A short model card in the style of *Mitchell et al., FAccT 2019*.
 
@@ -15,7 +15,7 @@ A short model card in the style of *Mitchell et al., FAccT 2019*.
   image is AI-generated. Returned with a small list of supporting
   indicators.
 - **License:** Code under the repo's license. Trained weights are not
-  redistributed under a permissive license — see "Training data" below.
+  redistributed under a permissive license; see "Training data" below.
 
 ## Intended use
 
@@ -23,7 +23,7 @@ A short model card in the style of *Mitchell et al., FAccT 2019*.
 
 1. Helping a person decide whether an image they have received or found is
    likely to be AI-generated.
-2. As a verification step inside the Athena consumer flow — once a perceptual
+2. As a verification step inside the Athena consumer flow: once a perceptual
    hash collision is found against an enrollee's reference photo, the
    classifier confirms the suspect image is synthetic before drafting a
    takedown.
@@ -55,7 +55,7 @@ or low-resolution unsafe-for-work content has not been characterized.
 ## Performance
 
 Headline numbers and robustness tables in [`EVAL.md`](EVAL.md). Calibration
-is not yet measured — the confidence values returned by the API are sigmoid
+is not yet measured. The confidence values returned by the API are sigmoid
 probabilities, not calibrated likelihoods.
 
 ## Ethical considerations
@@ -78,7 +78,7 @@ deployment of the consumer product around four mitigations:
 
 The classifier itself does not surface any face identity, only a
 synthetic-vs-real signal, and is therefore not subject to the same
-abuse risks as the broader product — but if you are integrating it into
+abuse risks as the broader product. If you are integrating it into
 a higher-risk system, the burden of those mitigations is on you.
 
 ## Known failure modes

@@ -6,7 +6,7 @@
 
 96% of deepfakes are non-consensual pornography. 99% of victims are women. Zero consumer tools exist to fight back. Athena is what changes that.
 
-- **Live demo:** _coming soon — `athena-demo.fly.dev`_
+- **Live demo:** _coming soon at `athena-demo.fly.dev`_
 - **Detector evaluation:** [`EVAL.md`](EVAL.md)
 - **Model card:** [`MODEL_CARD.md`](MODEL_CARD.md)
 
@@ -80,11 +80,11 @@ Two-phase training runs by default: phase 1 freezes the backbone and trains only
 | 440,000 child deepfake reports to NCMEC in H1 2025 | NCMEC |
 | 21M monthly visits to nudify websites | ISD Global |
 | 1 in 10 minors say classmates use AI to generate nudes of other kids | Thorn |
-| $0 consumer tools exist | — |
+| $0 consumer tools exist | |
 
 ## Built by
 
-**Maisy Mylod** — B.S. Pure Mathematics, University of Michigan. Former Data Analyst at CLEAR (biometric identity, 20M+ users). Software Engineer at Goldsmith & Co.
+**Maisy Mylod**: B.S. Pure Mathematics, University of Michigan. Former Data Analyst at CLEAR (biometric identity, 20M+ users). Software Engineer at Goldsmith & Co.
 
 [LinkedIn](https://linkedin.com/in/maisymylod) · [GitHub](https://github.com/maisymylod)
 

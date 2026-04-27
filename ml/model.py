@@ -1,4 +1,4 @@
-"""DeepfakeDetector — EfficientNet-B0 with custom classification head."""
+"""DeepfakeDetector, EfficientNet-B0 with custom classification head."""
 
 import torch
 import torch.nn as nn

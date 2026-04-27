@@ -1,4 +1,4 @@
-# Athena — Detector Evaluation
+# Athena · Detector Evaluation
 
 This document records how the synthetic-image classifier shipped at
 `checkpoints/best_model.pt` was trained and how it performs on held-out
@@ -35,7 +35,7 @@ Splits (stratified by label, seed=42, configured in
 - Test: 242 images
 
 Six images (3 per class) are held out before the split and used as the
-landing-page demo's "Try with these" examples — they are not part of
+landing-page demo's "Try with these" examples. They are not part of
 train, val, or test.
 
 ## Augmentations
@@ -47,7 +47,7 @@ Configured in `ml/dataset.py` and `ml/config.py:AugmentConfig`.
 - RandomRotation(±10°)
 - ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1)
 - GaussianBlur, kernel=5, p=0.2
-- JPEGCompressionAugment(quality 30–95) — simulates real-world recompression
+- JPEGCompressionAugment(quality 30–95) to simulate real-world recompression
 - Normalize with ImageNet stats
 - RandomErasing(p=0.3)
 
@@ -93,7 +93,7 @@ Confusion matrix:
 | **Synthetic** | 0 (FN) | 121 (TP) |
 
 One false positive, zero false negatives. The model is currently more
-willing to flag a real image than to miss a synthetic one — a
+willing to flag a real image than to miss a synthetic one. That's a
 deliberate bias for this domain (false negatives are worse: a missed
 deepfake is content that stays online).
 
@@ -143,7 +143,7 @@ model's decision boundary is robust even when accuracy at the
 # 1. Download dataset + lay it out under data/raw/
 python scripts/prepare_dataset.py
 
-# 2. Train (Apple MPS, CUDA, or CPU — auto-detected)
+# 2. Train (Apple MPS, CUDA, or CPU; auto-detected)
 python scripts/run_training.py \
     --data-dir data/raw --output-dir checkpoints \
     --epochs 12 --freeze-epochs 3 --batch-size 32 --num-workers 0

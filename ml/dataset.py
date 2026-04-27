@@ -18,7 +18,7 @@ SUPPORTED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff"}
 
 
 class JPEGCompressionAugment:
-    """Simulate JPEG compression artifacts — common in real-world deepfakes."""
+    """Simulate JPEG compression artifacts, common in real-world deepfakes."""
 
     def __init__(self, quality_range: tuple[int, int] = (30, 95)):
         self.quality_range = quality_range
@@ -71,8 +71,8 @@ class DeepfakeDataset(Dataset):
     """Dataset for real vs synthetic image classification.
 
     Expects directory structure:
-        data_dir/real/     — real images (label 0)
-        data_dir/synthetic/ — AI-generated images (label 1)
+        data_dir/real/       (real images, label 0)
+        data_dir/synthetic/  (AI-generated images, label 1)
     """
 
     def __init__(

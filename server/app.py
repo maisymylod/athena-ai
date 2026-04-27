@@ -28,7 +28,7 @@ def _get_inference():
 
     if not Path(checkpoint_path).exists():
         logger.warning(
-            "No checkpoint found at %s — /api/detect will return an error. "
+            "No checkpoint found at %s, /api/detect will return an error. "
             "Train a model first with: python scripts/run_training.py",
             checkpoint_path,
         )
@@ -106,7 +106,7 @@ def create_app() -> Flask:
                 jsonify(
                     {
                         "error": "Model not yet available on this deployment. "
-                        "The classifier is being trained — see /api/health.",
+                        "The classifier is being trained, see /api/health.",
                         "model_available": False,
                     }
                 ),

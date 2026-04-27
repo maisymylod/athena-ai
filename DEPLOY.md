@@ -42,7 +42,7 @@ fly launch --no-deploy --copy-config --name athena-demo
 app name `athena-demo` is taken, pick another (`fly launch` will prompt).
 
 If `fly launch` re-runs and changes `fly.toml`, revert any unwanted
-edits — the in-repo `fly.toml` is opinionated about the healthcheck path
+edits. The in-repo `fly.toml` is opinionated about the healthcheck path
 and machine size.
 
 ## Deploy

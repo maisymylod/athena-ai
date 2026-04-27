@@ -1,4 +1,4 @@
-"""DeepfakeInference — load model checkpoint and predict on single images."""
+"""DeepfakeInference, load model checkpoint and predict on single images."""
 
 import logging
 from pathlib import Path

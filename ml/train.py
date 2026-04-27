@@ -227,7 +227,7 @@ class Trainer:
             elapsed = time.time() - start
 
             logger.info(
-                "Epoch %d/%d [%.1fs] — train_loss=%.4f train_acc=%.4f val_loss=%.4f val_acc=%.4f",
+                "Epoch %d/%d [%.1fs], train_loss=%.4f train_acc=%.4f val_loss=%.4f val_acc=%.4f",
                 epoch + 1,
                 self.config.freeze_epochs,
                 elapsed,
@@ -263,7 +263,7 @@ class Trainer:
             elapsed = time.time() - start
 
             logger.info(
-                "Epoch %d/%d [%.1fs] — train_loss=%.4f train_acc=%.4f val_loss=%.4f val_acc=%.4f",
+                "Epoch %d/%d [%.1fs], train_loss=%.4f train_acc=%.4f val_loss=%.4f val_acc=%.4f",
                 global_epoch + 1,
                 self.config.epochs,
                 elapsed,
