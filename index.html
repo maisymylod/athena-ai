@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Athena — Protecting Women & Girls from Deepfake Abuse</title>
+  <title>Athena · Protecting Women &amp; Girls from Deepfake Abuse</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -25,12 +25,19 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    html { scroll-behavior: smooth; }
+
     body {
       font-family: 'Outfit', sans-serif;
       background: var(--bg-dark);
       color: var(--text-primary);
       overflow-x: hidden;
       line-height: 1.6;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     }
 
     /* ===== BACKGROUND ===== */
@@ -211,6 +218,14 @@
       from { opacity: 0; transform: translateY(24px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    }
+
+    .reveal.in-view { opacity: 1; transform: translateY(0); }
 
     /* ===== STATS ===== */
     .stats {
@@ -523,13 +538,43 @@
 
     .detect-loading {
       display: none;
-      text-align: center;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
       padding: 24px;
       color: var(--text-secondary);
       font-size: 0.9rem;
     }
 
-    .detect-loading.visible { display: block; }
+    .detect-loading.visible { display: flex; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(192, 132, 252, 0.25);
+      border-top-color: var(--purple-light);
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .drop-zone-preview {
+      display: none;
+      max-width: 240px;
+      margin: 0 auto 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .drop-zone-preview.visible { display: block; }
+
+    .drop-zone-preview img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
 
     .detect-error {
       display: none;
@@ -551,6 +596,324 @@
       display: grid;
       grid-template-columns: repeat(6, 1fr);
       gap: 12px;
+    }
+
+    /* ===== UNDER THE HOOD ===== */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .tech-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .tech-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--mx, 50%) var(--my, 0%),
+                  rgba(147, 51, 234, 0.18), transparent 60%);
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+    }
+
+    .tech-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(147, 51, 234, 0.35);
+      box-shadow: 0 12px 40px rgba(147, 51, 234, 0.18);
+    }
+
+    .tech-card:hover::before { opacity: 1; }
+
+    .tech-card h4 {
+      font-size: 0.7rem;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--purple-bright);
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .tech-card .tech-headline {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.35rem;
+      line-height: 1.25;
+      margin-bottom: 14px;
+    }
+
+    .tech-card p {
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      font-weight: 300;
+      line-height: 1.65;
+    }
+
+    .tech-card code {
+      font-family: 'SF Mono', ui-monospace, monospace;
+      font-size: 0.78rem;
+      color: var(--purple-light);
+      background: rgba(147, 51, 234, 0.08);
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+
+    .metrics-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      margin-bottom: 32px;
+    }
+
+    .metrics-table th,
+    .metrics-table td {
+      padding: 14px 20px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .metrics-table th {
+      background: rgba(147, 51, 234, 0.05);
+      color: var(--purple-light);
+      font-weight: 500;
+      font-size: 0.78rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .metrics-table tr:last-child td { border-bottom: none; }
+
+    .metrics-table td.numeric {
+      font-family: 'SF Mono', ui-monospace, monospace;
+      color: var(--text-primary);
+      text-align: right;
+    }
+
+    .metrics-table td.numeric.headline {
+      color: var(--purple-light);
+      font-weight: 600;
+    }
+
+    /* ===== METRIC HEADLINES ===== */
+    .metric-headlines {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .metric-tile {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px 20px;
+      text-align: center;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .metric-tile.headline { border-color: rgba(147, 51, 234, 0.35); }
+    .metric-tile:hover { transform: translateY(-2px); border-color: var(--purple-light); }
+
+    .metric-tile .metric-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem;
+      line-height: 1;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-tile.headline .metric-num {
+      color: var(--purple-light);
+      text-shadow: 0 0 24px rgba(192, 132, 252, 0.35);
+    }
+
+    .metric-tile .metric-label {
+      font-size: 0.7rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* ===== CONFUSION MATRIX ===== */
+    .confusion-grid {
+      display: grid;
+      grid-template-columns: 110px 1fr 1fr;
+      grid-template-rows: 36px 1fr 1fr;
+      gap: 6px;
+      max-width: 540px;
+      margin-bottom: 32px;
+    }
+
+    .conf-axis {
+      font-size: 0.68rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 500;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .conf-axis.top { grid-row: 1; }
+    .conf-axis.left {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+    }
+
+    .conf-cell {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 12px;
+      text-align: center;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .conf-cell:hover { transform: scale(1.02); border-color: var(--purple-light); }
+
+    .conf-cell.correct { border-color: rgba(52, 211, 153, 0.4); background: rgba(52, 211, 153, 0.05); }
+    .conf-cell.error   { border-color: rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.05); }
+
+    .conf-cell .conf-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.9rem;
+      line-height: 1;
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .conf-cell.correct .conf-num { color: #34D399; }
+    .conf-cell.error   .conf-num { color: #F87171; }
+
+    .conf-cell .conf-tag {
+      font-size: 0.62rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* ===== ROBUSTNESS BARS ===== */
+    .robustness {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      margin-bottom: 32px;
+    }
+
+    .robustness h4 {
+      font-size: 0.7rem;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--purple-bright);
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .robust-row {
+      display: grid;
+      grid-template-columns: 200px 1fr 60px;
+      align-items: center;
+      gap: 16px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .robust-row:last-child { border-bottom: none; }
+
+    .robust-label {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+    }
+
+    .robust-bar-track {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .robust-bar-fill {
+      position: absolute;
+      inset: 0;
+      width: 0;
+      background: linear-gradient(90deg, #6B21A8, #C084FC);
+      border-radius: 4px;
+      transition: width 1.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    .robust-value {
+      font-family: 'SF Mono', ui-monospace, monospace;
+      font-size: 0.85rem;
+      color: var(--purple-light);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .repo-links {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      margin-top: 8px;
+    }
+
+    .repo-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-family: 'SF Mono', ui-monospace, monospace;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .repo-link:hover {
+      border-color: var(--purple-light);
+      background: var(--bg-card-hover);
+    }
+
+    /* ===== TAKEDOWN SAMPLE ===== */
+    .takedown-block {
+      background: #0E0B14;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 36px;
+      font-family: 'SF Mono', ui-monospace, monospace;
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: #C8BFE0;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .takedown-block .key { color: var(--purple-light); }
+    .takedown-block .heading { color: #F5F0FF; font-weight: 600; }
+    .takedown-block .rule { color: #4A1072; }
+
+    @media (max-width: 900px) {
+      .tech-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      .metrics-table th, .metrics-table td { padding: 10px 14px; font-size: 0.78rem; }
+      .takedown-block { font-size: 0.7rem; padding: 20px 18px; }
     }
 
     .founder-card {
@@ -748,10 +1111,10 @@
   <nav>
     <a href="#" class="nav-logo">ATHENA<span>.</span></a>
     <div class="nav-links">
-      <a href="#features">Features</a>
       <a href="#how">How It Works</a>
       <a href="#ethics">Safeguards</a>
       <a href="#detect">Try It</a>
+      <a href="#tech">Under the Hood</a>
       <a href="#waitlist" class="nav-cta">Join Waitlist</a>
     </div>
   </nav>
@@ -802,17 +1165,17 @@
       <div class="feature-card">
         <div class="feature-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <h3>Deepfake Detection</h3>
-        <p>Drop any suspicious image into Athena and our classifier tells you in seconds whether it was generated by AI nudification or face-swap tools — with the indicators it found. <strong style="color: var(--purple-light);">Live today.</strong></p>
+        <p>Drop any suspicious image into Athena and our classifier tells you in seconds whether it was generated by AI nudification or face-swap tools, with the indicators it found. <strong style="color: var(--purple-light);">Live today.</strong></p>
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
         <h3>Image Shield</h3>
-        <p>Once enrolled, Athena fingerprints your reference photo into a one-way perceptual hash and watches the open web for matches. You — and only you — get the alert. <strong style="color: var(--text-muted);">Roadmap.</strong></p>
+        <p>Once enrolled, Athena fingerprints your reference photo into a one-way perceptual hash and watches the open web for matches. You, and only you, get the alert. <strong style="color: var(--text-muted);">Roadmap.</strong></p>
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M12 3v19M5 8l7-5 7 5M5 8l-1 8h6L5 8zM19 8l1 8h-6l5-8z"/></svg></div>
         <h3>Auto Takedown</h3>
-        <p>When a match is verified synthetic, Athena drafts the TAKE IT DOWN Act notice and routes it to the host. The "TurboTax of takedown" — you don't need a lawyer. <strong style="color: var(--text-muted);">Roadmap.</strong></p>
+        <p>When a match is verified synthetic, Athena drafts the TAKE IT DOWN Act notice and routes it to the host. Think of it as the "TurboTax of takedown": no lawyer required. <strong style="color: var(--text-muted);">Roadmap.</strong></p>
       </div>
     </div>
   </section>
@@ -822,7 +1185,7 @@
     <div class="crisis">
       <div class="section-label">The Crisis</div>
       <h2 class="section-title">This is not a future problem.<br>It is happening now.</h2>
-      <p class="section-subtitle" style="margin: 16px auto 0; max-width: 640px;">Nudify apps are free, require zero technical skill, and need only one photo. Schools, families, and communities are under attack — with no tools to fight back.</p>
+      <p class="section-subtitle" style="margin: 16px auto 0; max-width: 640px;">Nudify apps are free, require zero technical skill, and need only one photo. Schools, families, and communities are under attack with no tools to fight back.</p>
       <div class="crisis-stats">
         <div class="crisis-stat">
           <div class="stat-number">96%</div>
@@ -848,11 +1211,11 @@
     <div class="steps">
       <div class="step">
         <h3>Verify it's you</h3>
-        <p>Identity-verified enrollment with a selfie liveness check that has to match your reference photo. You can only enroll your own face — never anyone else's. Reference photos are turned into a one-way perceptual hash; the original image is discarded.</p>
+        <p>Identity-verified enrollment with a selfie liveness check that has to match your reference photo. You can only enroll your own face, never anyone else's. Reference photos are turned into a one-way perceptual hash; the original image is discarded.</p>
       </div>
       <div class="step">
         <h3>Athena monitors for you</h3>
-        <p>We scan partner-network sources and known hosts for hash collisions against your enrollment. Match notifications go only to you — never to third parties, never to a public feed.</p>
+        <p>We scan partner-network sources and known hosts for hash collisions against your enrollment. Match notifications go only to you, never to third parties, never to a public feed.</p>
       </div>
       <div class="step">
         <h3>Detect, prove, and remove</h3>
@@ -874,7 +1237,7 @@
       </div>
       <div class="feature-card">
         <div class="feature-icon"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-        <h3>Hashes only — no face database</h3>
+        <h3>Hashes only, no face database</h3>
         <p>Reference photos are converted into a one-way perceptual hash and the originals are discarded. We never store raw face embeddings, biometric vectors, or images that could be reused as a face DB.</p>
       </div>
       <div class="feature-card">
@@ -896,11 +1259,12 @@
         <svg width="24" height="24" fill="none" stroke="var(--purple-light)" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       </div>
       <h3>Drag & drop an image here</h3>
-      <p>or click to browse — JPG, PNG, WebP (max 16 MB)</p>
+      <p>or click to browse, JPG, PNG, WebP (max 16 MB)</p>
     </div>
+    <div class="drop-zone-preview" id="drop-zone-preview"><img id="drop-zone-preview-img" alt=""></div>
     <div class="examples-label" style="margin-top: 24px;">Or try one of these</div>
     <div class="examples-row" id="examples-row" aria-label="Try one of these example images"></div>
-    <div class="detect-loading" id="detect-loading">Analyzing image...</div>
+    <div class="detect-loading" id="detect-loading"><span class="spinner"></span><span>Analyzing image...</span></div>
     <div class="detect-error" id="detect-error"></div>
     <div class="detect-result" id="detect-result">
       <div class="detect-result-header">
@@ -914,10 +1278,168 @@
     </div>
   </section>
 
+  <!-- UNDER THE HOOD -->
+  <section id="tech">
+    <div class="section-label">Under the hood</div>
+    <h2 class="section-title">How the detector actually works</h2>
+    <p class="section-subtitle">A YC reviewer should be able to verify the model is real. Here's what's shipped today, with the actual numbers from the held-out test split.</p>
+
+    <div class="tech-grid reveal">
+      <div class="tech-card">
+        <h4>Architecture</h4>
+        <div class="tech-headline">EfficientNet-B0 + classifier head</div>
+        <p><code>features → AdaptiveAvgPool → Dropout(0.3) → Linear(1280, 512) → ReLU → Dropout(0.2) → Linear(512, 1)</code>, single logit, trained with <code>BCEWithLogitsLoss</code>. <strong style="color: var(--text-primary);">4.71M parameters, 19 MB on disk.</strong></p>
+      </div>
+      <div class="tech-card">
+        <h4>Training</h4>
+        <div class="tech-headline">Two-phase fine-tune in 4 minutes</div>
+        <p>Phase 1: 3 epochs with the ImageNet-pretrained backbone <strong style="color: var(--text-primary);">frozen</strong>, classifier head only. Phase 2: 9 epochs with everything <strong style="color: var(--text-primary);">unfrozen</strong> at <code>1/10</code> the learning rate. Apple Silicon MPS, batch size 32. <code>AdamW</code> + <code>ReduceLROnPlateau</code>, early stopping at patience 4.</p>
+      </div>
+      <div class="tech-card">
+        <h4>Data &amp; augmentations</h4>
+        <div class="tech-headline">2,394 images, 3 generators</div>
+        <p>1,197 real photos + 1,197 AI samples from <strong style="color: var(--text-primary);">Flux, Stable Diffusion 1.5, and one more</strong> generator. Stratified 75/15/10 split. Augmentations simulate real-world distortion: <code>JPEG q=30–95</code>, <code>±10° rotation</code>, color jitter, Gaussian blur, RandomErasing. Held-out 6 images for the demo above.</p>
+      </div>
+    </div>
+
+    <h3 style="font-family: 'DM Serif Display', serif; font-size: 1.4rem; margin-bottom: 16px;">Test-set metrics <span style="color: var(--text-muted); font-weight: 400; font-size: 0.85rem; letter-spacing: 1.5px; text-transform: uppercase; margin-left: 8px;">242 held-out images</span></h3>
+
+    <div class="metric-headlines reveal">
+      <div class="metric-tile headline">
+        <div class="metric-num" data-count-to="0.9999" data-decimals="4">0.0000</div>
+        <div class="metric-label">ROC-AUC</div>
+      </div>
+      <div class="metric-tile">
+        <div class="metric-num" data-count-to="0.9959" data-decimals="4">0.0000</div>
+        <div class="metric-label">Accuracy</div>
+      </div>
+      <div class="metric-tile">
+        <div class="metric-num" data-count-to="0.9959" data-decimals="4">0.0000</div>
+        <div class="metric-label">F1</div>
+      </div>
+      <div class="metric-tile">
+        <div class="metric-num" data-count-to="10" data-decimals="0" data-suffix=" ms">0 ms</div>
+        <div class="metric-label">Latency · MPS</div>
+      </div>
+    </div>
+
+    <h3 style="font-family: 'DM Serif Display', serif; font-size: 1.2rem; margin: 32px 0 12px;">Confusion matrix</h3>
+
+    <div class="confusion-grid reveal">
+      <div></div>
+      <div class="conf-axis top">Predicted Real</div>
+      <div class="conf-axis top">Predicted Synthetic</div>
+
+      <div class="conf-axis left">Actual Real</div>
+      <div class="conf-cell correct">
+        <div class="conf-num" data-count-to="120" data-decimals="0">0</div>
+        <div class="conf-tag">True Negative</div>
+      </div>
+      <div class="conf-cell error">
+        <div class="conf-num" data-count-to="1" data-decimals="0">0</div>
+        <div class="conf-tag">False Positive</div>
+      </div>
+
+      <div class="conf-axis left">Actual Synthetic</div>
+      <div class="conf-cell error">
+        <div class="conf-num" data-count-to="0" data-decimals="0">0</div>
+        <div class="conf-tag">False Negative</div>
+      </div>
+      <div class="conf-cell correct">
+        <div class="conf-num" data-count-to="121" data-decimals="0">0</div>
+        <div class="conf-tag">True Positive</div>
+      </div>
+    </div>
+
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 36px; line-height: 1.7;">One false positive, zero false negatives. We've biased the model toward flagging a real image over missing a synthetic one. In this domain, a missed deepfake is content that stays online.</p>
+
+    <div class="robustness reveal">
+      <h4>Robustness sweep · ROC-AUC under perturbation</h4>
+      <div class="robust-row">
+        <div class="robust-label">Clean</div>
+        <div class="robust-bar-track"><div class="robust-bar-fill" data-fill="99.99"></div></div>
+        <div class="robust-value">0.9999</div>
+      </div>
+      <div class="robust-row">
+        <div class="robust-label">JPEG quality 50</div>
+        <div class="robust-bar-track"><div class="robust-bar-fill" data-fill="99.99"></div></div>
+        <div class="robust-value">0.9999</div>
+      </div>
+      <div class="robust-row">
+        <div class="robust-label">JPEG quality 30</div>
+        <div class="robust-bar-track"><div class="robust-bar-fill" data-fill="99.99"></div></div>
+        <div class="robust-value">0.9999</div>
+      </div>
+      <div class="robust-row">
+        <div class="robust-label">2× downsample &amp; upsample</div>
+        <div class="robust-bar-track"><div class="robust-bar-fill" data-fill="99.99"></div></div>
+        <div class="robust-value">0.9999</div>
+      </div>
+      <div class="robust-row">
+        <div class="robust-label">5° rotation</div>
+        <div class="robust-bar-track"><div class="robust-bar-fill" data-fill="100"></div></div>
+        <div class="robust-value">1.0000</div>
+      </div>
+    </div>
+
+    <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 20px; line-height: 1.7;">ROC-AUC stays at <code style="color: var(--purple-light);">≥ 0.9999</code> across every perturbation we tested, including JPEG q=30 (heavier than what most platforms re-encode at) and a 2× downsample/upsample round-trip. The decision boundary holds even when threshold accuracy slips slightly under heavy compression.</p>
+
+    <div class="repo-links">
+      <a class="repo-link" href="https://github.com/maisymylod/athena-ai/blob/main/EVAL.md">EVAL.md</a>
+      <a class="repo-link" href="https://github.com/maisymylod/athena-ai/blob/main/MODEL_CARD.md">MODEL_CARD.md</a>
+      <a class="repo-link" href="https://github.com/maisymylod/athena-ai/blob/main/ml/model.py">ml/model.py</a>
+      <a class="repo-link" href="https://github.com/maisymylod/athena-ai/blob/main/ml/train.py">ml/train.py</a>
+      <a class="repo-link" href="https://github.com/maisymylod/athena-ai/blob/main/server/app.py">server/app.py</a>
+      <a class="repo-link" href="https://github.com/maisymylod/athena-ai">GitHub →</a>
+    </div>
+  </section>
+
+  <!-- TAKEDOWN SAMPLE -->
+  <section id="takedown">
+    <div class="section-label">Pipeline output</div>
+    <h2 class="section-title">What a takedown notice looks like</h2>
+    <p class="section-subtitle">When the classifier confirms a hash match is synthetic, <code style="font-family: 'SF Mono', ui-monospace, monospace; color: var(--purple-light); background: rgba(147, 51, 234, 0.08); padding: 1px 6px; border-radius: 4px; font-size: 0.85rem;">tools/monitor.py:TakedownGenerator</code> drafts the TAKE IT DOWN Act notice the host receives. This is the actual output of that generator, with example data.</p>
+
+    <div class="takedown-block reveal"><span class="heading">TAKEDOWN REQUEST · TAKE IT DOWN Act (S.146, 119th Congress)</span>
+<span class="rule">============================================================</span>
+<span class="key">Date:</span>           2026-04-27 19:27 UTC
+<span class="key">Platform:</span>       example-host.com
+<span class="key">Content URL:</span>    https://example-host.com/u/_anon_2bc4f/i/0847.jpg
+
+<span class="heading">NOTIFICATION OF NON-CONSENSUAL INTIMATE IMAGERY</span>
+
+Pursuant to the TAKE IT DOWN Act, I am requesting the immediate
+removal of the following content, which constitutes non-consensual
+intimate imagery generated using artificial intelligence.
+
+<span class="key">CONTENT DETAILS:</span>
+  URL:              https://example-host.com/u/_anon_2bc4f/i/0847.jpg
+  Detection Method: Perceptual hash matching + synthetic analysis
+  Similarity Score: 94%
+  Hash Match:       [reference] → [detected]
+
+<span class="key">SYNTHETIC GENERATION INDICATORS:</span>
+  - ML model confidence: 100%
+  - AI tool signature: stable diffusion
+  - Resolution 512x768 matches AI generation pattern
+
+This content was identified as AI-generated non-consensual intimate
+imagery through automated detection. Under the TAKE IT DOWN Act,
+platforms must remove such content within 48 hours of notification.
+
+<span class="key">REQUEST:</span>
+  1. Remove the identified content immediately.
+  2. Prevent re-upload using the provided content hash.
+  3. Preserve evidence for potential law enforcement referral.
+
+<span class="rule">============================================================</span>
+<span style="color: var(--text-muted);">Generated by Athena, https://github.com/maisymylod/athena-ai</span></div>
+  </section>
+
   <!-- FOUNDER -->
   <section id="founder">
     <div class="section-label">Founder</div>
-    <h2 class="section-title">Why this — and why me</h2>
+    <h2 class="section-title">Why this, and why me</h2>
     <p class="section-subtitle">A solo founder's pitch deserves a personal answer.</p>
     <div class="founder-card">
       <img class="founder-avatar" src="/static/founder.jpg" alt="Maisy Mylod" width="120" height="120">
@@ -1138,7 +1660,7 @@
           row.appendChild(thumb);
         });
       } catch (err) {
-        // Silent — examples are optional progressive enhancement
+        // Silent, examples are optional progressive enhancement
       }
     }
 
@@ -1149,6 +1671,85 @@
       el.style.transform = 'translateY(20px)';
       el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
       observer.observe(el);
+    });
+
+    // Reveal-on-scroll for tagged elements (.reveal class)
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in-view');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // Animated count-up for [data-count-to]
+    function animateCount(el) {
+      const target = parseFloat(el.dataset.countTo);
+      const decimals = parseInt(el.dataset.decimals || '0', 10);
+      const suffix = el.dataset.suffix || '';
+      const prefix = el.dataset.prefix || '';
+      const duration = 1500;
+      const start = performance.now();
+      function frame(now) {
+        const t = Math.min(1, (now - start) / duration);
+        // Ease-out cubic
+        const eased = 1 - Math.pow(1 - t, 3);
+        const current = target * eased;
+        el.textContent = prefix + current.toFixed(decimals) + suffix;
+        if (t < 1) requestAnimationFrame(frame);
+        else el.textContent = prefix + target.toFixed(decimals) + suffix;
+      }
+      requestAnimationFrame(frame);
+    }
+
+    const countObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          animateCount(entry.target);
+          countObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll('[data-count-to]').forEach(el => countObserver.observe(el));
+
+    // Robustness bar fill on scroll-into-view
+    const barObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.querySelectorAll('.robust-bar-fill').forEach((bar, i) => {
+            const fill = parseFloat(bar.dataset.fill || '0');
+            setTimeout(() => { bar.style.width = fill + '%'; }, 120 * i);
+          });
+          barObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    document.querySelectorAll('.robustness').forEach(el => barObserver.observe(el));
+
+    // Drop-zone live preview after a file is selected
+    const dropPreview = document.getElementById('drop-zone-preview');
+    const dropPreviewImg = document.getElementById('drop-zone-preview-img');
+    const _origAnalyze = analyzeFile;
+    analyzeFile = function(file) {
+      if (file && file.type && file.type.startsWith('image/')) {
+        const url = URL.createObjectURL(file);
+        dropPreviewImg.src = url;
+        dropPreview.classList.add('visible');
+      }
+      return _origAnalyze(file);
+    };
+
+    // Tech-card mouse-tracked glow
+    document.querySelectorAll('.tech-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const mx = ((e.clientX - rect.left) / rect.width) * 100;
+        const my = ((e.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--mx', mx + '%');
+        card.style.setProperty('--my', my + '%');
+      });
     });
   </script>
 </body>
