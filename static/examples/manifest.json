@@ -1,0 +1,41 @@
+{
+  "_comment": "Example images shown in the 'Try with these' demo affordance. Replace placeholders with curated real photos (e.g. Unsplash CC0) and AI-generated samples (e.g. public Stable Diffusion outputs) before launch.",
+  "examples": [
+    {
+      "label": "Real photo 1",
+      "src": "/static/examples/real_1.jpg",
+      "expected": "real",
+      "credit": "PLACEHOLDER — replace before launch"
+    },
+    {
+      "label": "Real photo 2",
+      "src": "/static/examples/real_2.jpg",
+      "expected": "real",
+      "credit": "PLACEHOLDER — replace before launch"
+    },
+    {
+      "label": "Real photo 3",
+      "src": "/static/examples/real_3.jpg",
+      "expected": "real",
+      "credit": "PLACEHOLDER — replace before launch"
+    },
+    {
+      "label": "AI-generated 1",
+      "src": "/static/examples/ai_1.jpg",
+      "expected": "synthetic",
+      "credit": "PLACEHOLDER — replace before launch"
+    },
+    {
+      "label": "AI-generated 2",
+      "src": "/static/examples/ai_2.jpg",
+      "expected": "synthetic",
+      "credit": "PLACEHOLDER — replace before launch"
+    },
+    {
+      "label": "AI-generated 3",
+      "src": "/static/examples/ai_3.jpg",
+      "expected": "synthetic",
+      "credit": "PLACEHOLDER — replace before launch"
+    }
+  ]
+}

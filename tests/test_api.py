@@ -53,7 +53,7 @@ class TestDetectEndpoint:
         data = {"image": (sample_image_bytes, "test.jpg")}
         resp = client.post("/api/detect", data=data, content_type="multipart/form-data")
         assert resp.status_code == 503
-        assert b"No trained model" in resp.data
+        assert resp.get_json()["model_available"] is False
 
     @patch("server.app._get_inference")
     def test_successful_detection(self, mock_get, client, sample_image_bytes):
@@ -98,3 +98,18 @@ class TestCORS:
     def test_cors_headers(self, client):
         resp = client.get("/")
         assert resp.headers.get("Access-Control-Allow-Origin") == "*"
+
+    def test_options_preflight(self, client):
+        resp = client.options("/api/detect")
+        assert resp.status_code == 204
+        assert resp.headers.get("Access-Control-Allow-Origin") == "*"
+
+
+class TestHealth:
+    def test_health_endpoint(self, client):
+        resp = client.get("/api/health")
+        assert resp.status_code == 200
+        body = resp.get_json()
+        assert body["status"] == "ok"
+        assert "model_available" in body
+        assert "checkpoint_path" in body
