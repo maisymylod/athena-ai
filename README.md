@@ -1,117 +1,76 @@
 # Athena
 
-**Protecting women & girls from deepfake abuse.**
+**Detect AI-generated non-consensual intimate imagery, prove it's synthetic, and get it removed under the [TAKE IT DOWN Act](https://www.congress.gov/bill/119th-congress/senate-bill/146).**
 
-Athena detects AI-generated non-consensual intimate imagery, monitors the web for deepfakes of protected individuals, and automates [TAKE IT DOWN Act](https://www.congress.gov/bill/119th-congress/senate-bill/146) takedown requests.
+[![CI](https://github.com/maisymylod/athena-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/maisymylod/athena-ai/actions/workflows/ci.yml)
 
-96% of deepfakes are non-consensual pornography. 99% of the victims are women. There are zero consumer tools to fight back. Athena changes that.
+96% of deepfakes are non-consensual pornography. 99% of victims are women. Zero consumer tools exist to fight back. Athena is what changes that.
 
----
+- **Live demo:** _coming soon — `athena-demo.fly.dev`_
+- **Detector evaluation:** [`EVAL.md`](EVAL.md)
+- **Model card:** [`MODEL_CARD.md`](MODEL_CARD.md)
 
-## What's in this repo
+## What's shipped today
 
-```
-athena-ai/
-├── index.html              # Landing page (athena.ai)
-├── tools/
-│   └── monitor.py          # Image monitoring & scraping pipeline
-├── requirements.txt
-└── README.md
-```
-
-### Landing Page
-
-A static site for athena.ai with waitlist signup. Open `index.html` in any browser.
-
-### Image Monitor (`tools/monitor.py`)
-
-A proof-of-concept web scanning pipeline that:
-
-- **Crawls** web pages and extracts image URLs
-- **Computes perceptual hashes** (pHash) of found images
-- **Compares** against a set of protected reference images to find potential matches
-- **Analyzes** images for synthetic generation indicators (metadata heuristics, with a stub for the trained ML model)
-- **Generates TAKE IT DOWN Act-compliant takedown requests** for matched content
-
-#### Quick start
+A real-vs-AI image classifier (EfficientNet-B0, two-phase fine-tune) you can hit at `POST /api/detect`. Drop an image in; get back a synthetic-vs-real verdict, a confidence score, and the indicators that drove the call.
 
 ```bash
 pip install -r requirements.txt
-
-# Run the demo (no external requests, uses synthetic test data)
-python tools/monitor.py --demo
-
-# Scan a URL against your reference photos
-python tools/monitor.py --refs ./my_photos/ --url https://example.com
-
-# Scan a list of URLs
-python tools/monitor.py --refs ./my_photos/ --urls watchlist.txt
+python -m flask --app server.app:create_app run --port 5000
+# in another shell:
+curl -F image=@your_test.jpg http://localhost:5000/api/detect
 ```
 
-#### Demo output
+The drag-and-drop UI in `index.html` is wired to the same endpoint. Six "Try with these" example thumbnails are bundled in `static/examples/` for one-click testing.
+
+## What's on the roadmap
+
+The longer-term consumer product is a face-monitoring service for people at risk of non-consensual deepfakes:
+
+1. **Identity-verified enrollment.** Government ID + a selfie liveness check whose face has to match the enrolled reference. You can only enroll your own face.
+2. **Hash-only storage.** Reference photos are converted into a one-way perceptual hash; originals are discarded.
+3. **Match notifications go only to the enrollee.** No admin lookup, no third-party feed, full audit log.
+4. **Auto-drafted TAKE IT DOWN Act takedowns** when the classifier verifies a hash match is also synthetic.
+
+The capability surface for that product overlaps with stalker tooling, so we are designing those four mitigations into the first deployable version, not as bolt-ons. See `MODEL_CARD.md` for the long version.
+
+## Repo layout
 
 ```
-============================================================
-  ATHENA IMAGE MONITOR — DEMO MODE
-  Protecting women & girls from deepfake abuse
-============================================================
-
-[*] Scan Results:
-------------------------------------------------------------
-  🚨 MATCH [SYNTHETIC]
-    URL:        https://example-site.com/images/img_0847.jpg
-    Similarity: 94%
-    Matched:    protected_user_ref_01.jpg
-
-  ✓ Clear
-    URL:        https://example-site.com/images/img_1293.jpg
-    Similarity: 12%
-
-  🚨 MATCH [SYNTHETIC]
-    URL:        https://example-site.com/images/img_2041.jpg
-    Similarity: 87%
-    Matched:    protected_user_ref_01.jpg
-
-[*] Generating 2 TAKE IT DOWN Act takedown request(s)...
+athena-ai/
+├── index.html              # Landing page + drag-drop demo UI
+├── server/app.py           # Flask API: /api/detect, /api/health
+├── ml/                     # PyTorch training & inference pipeline
+│   ├── model.py            # EfficientNet-B0 + classification head
+│   ├── train.py            # 2-phase trainer (frozen backbone → fine-tune)
+│   ├── dataset.py          # Stratified split + augmentations (incl. JPEG)
+│   ├── inference.py        # Loads a checkpoint, runs predict()
+│   └── evaluate.py         # Accuracy / precision / recall / F1 / ROC-AUC
+├── tools/monitor.py        # Perceptual-hash matching + takedown drafting
+├── scripts/run_training.py # Wrapper around ml.train
+├── static/                 # Frontend assets + bundled demo examples
+├── tests/                  # pytest suite (CI-gated)
+├── Dockerfile, fly.toml    # Demo deployment
+└── EVAL.md, MODEL_CARD.md  # Detector eval + model card
 ```
 
----
+## Train your own classifier
 
-## How it works
+```bash
+# 1. Get a dataset
+python ml/download_dataset.py --list
+mkdir -p data/raw/real data/raw/synthetic
+# (drop images into the appropriate subdirectories)
 
-1. **Identity enrollment** — Upload reference photos. Athena computes perceptual hashes (DCT-based pHash) that are robust to resizing, compression, and minor edits.
+# 2. Train
+python scripts/run_training.py --data-dir data/raw --output-dir checkpoints
 
-2. **Web monitoring** — The scraping pipeline crawls target sites and image boards, extracting images and comparing their perceptual hashes against enrolled identities.
+# 3. Run the API against the new weights
+ATHENA_CHECKPOINT=checkpoints/best_model.pt \
+    python -m flask --app server.app:create_app run
+```
 
-3. **Deepfake detection** — Images are analyzed for synthetic generation artifacts. The current version uses metadata heuristics; the production version will use a fine-tuned ConvNeXt model trained against output from top nudify tools.
-
-4. **Automated takedowns** — When a match is confirmed, Athena generates a TAKE IT DOWN Act-compliant takedown notice and files it with the hosting platform.
-
-## Tech stack
-
-| Layer | Technology |
-|-------|-----------|
-| Detection model (planned) | PyTorch, ConvNeXt/EfficientNet, DCT spectral analysis |
-| On-device inference | ONNX Runtime, Core ML, TensorFlow Lite |
-| Image matching | Perceptual hashing (pHash), CLIP embeddings |
-| Web scraping | Scrapy, BeautifulSoup, Requests |
-| Backend | Python (FastAPI), PostgreSQL, Redis |
-| Mobile | React Native |
-| Infrastructure | AWS (EC2, S3, Lambda) |
-
-## Roadmap
-
-- [x] Landing page with waitlist
-- [x] Perceptual hashing engine
-- [x] Web scraping/crawling pipeline
-- [x] Takedown request generator
-- [x] Synthetic image analysis (heuristic)
-- [ ] Trained deepfake detection model (ConvNeXt fine-tune)
-- [ ] Frequency-domain analysis (DCT spectral fingerprints)
-- [ ] CLIP-based semantic similarity matching
-- [ ] iOS / Android app
-- [ ] Platform reporting API integrations
-- [ ] Real-time monitoring dashboard
+Two-phase training runs by default: phase 1 freezes the backbone and trains only the classifier head; phase 2 unfreezes at 1/10 the learning rate. Configurable in `ml/config.py:TrainConfig`.
 
 ## The problem
 
@@ -119,9 +78,9 @@ python tools/monitor.py --refs ./my_photos/ --urls watchlist.txt
 |------|--------|
 | 99% of deepfake porn targets women | Sensity AI |
 | 440,000 child deepfake reports to NCMEC in H1 2025 | NCMEC |
-| 21 million monthly visits to nudify websites | ISD Global |
-| 1 in 10 minors say classmates use AI to generate nudes | Thorn |
-| $0 consumer tools exist to combat this | — |
+| 21M monthly visits to nudify websites | ISD Global |
+| 1 in 10 minors say classmates use AI to generate nudes of other kids | Thorn |
+| $0 consumer tools exist | — |
 
 ## Built by
 
