@@ -1,41 +1,41 @@
 {
-  "_comment": "Example images shown in the 'Try with these' demo affordance. Replace placeholders with curated real photos (e.g. Unsplash CC0) and AI-generated samples (e.g. public Stable Diffusion outputs) before launch.",
+  "_comment": "Six held-out images sampled from the Madushan996/real_fake_images Hugging Face dataset (https://huggingface.co/datasets/Madushan996/real_fake_images). The same dataset's training portion was used to fine-tune the classifier. AI samples come from three different generators (Flux, Stable Diffusion 1.5, and one more) so the demo isn't restricted to a single model family.",
   "examples": [
     {
       "label": "Real photo 1",
       "src": "/static/examples/real_1.jpg",
       "expected": "real",
-      "credit": "PLACEHOLDER — replace before launch"
+      "credit": "Madushan996/real_fake_images, real/ split"
     },
     {
       "label": "Real photo 2",
       "src": "/static/examples/real_2.jpg",
       "expected": "real",
-      "credit": "PLACEHOLDER — replace before launch"
+      "credit": "Madushan996/real_fake_images, real/ split"
     },
     {
       "label": "Real photo 3",
       "src": "/static/examples/real_3.jpg",
       "expected": "real",
-      "credit": "PLACEHOLDER — replace before launch"
+      "credit": "Madushan996/real_fake_images, real/ split"
     },
     {
       "label": "AI-generated 1",
       "src": "/static/examples/ai_1.jpg",
       "expected": "synthetic",
-      "credit": "PLACEHOLDER — replace before launch"
+      "credit": "Madushan996/real_fake_images, fake_fx/ (Flux)"
     },
     {
       "label": "AI-generated 2",
       "src": "/static/examples/ai_2.jpg",
       "expected": "synthetic",
-      "credit": "PLACEHOLDER — replace before launch"
+      "credit": "Madushan996/real_fake_images, fake_sd/ (Stable Diffusion)"
     },
     {
       "label": "AI-generated 3",
       "src": "/static/examples/ai_3.jpg",
       "expected": "synthetic",
-      "credit": "PLACEHOLDER — replace before launch"
+      "credit": "Madushan996/real_fake_images, fake_z/"
     }
   ]
 }
