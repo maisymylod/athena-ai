@@ -1,23 +1,34 @@
-"""Athena Image Monitor — Web scanning pipeline for detecting
-non-consensual AI-generated imagery.
+"""Athena Image Monitor — perceptual-hash matching pipeline.
 
-Crawls web pages, computes perceptual hashes, compares against
-protected reference images, and generates takedown requests.
+Hashes a set of opt-in reference images (enrolled by the protected person),
+then compares them against images found at user-supplied URLs or in user-
+supplied web pages. Flags matches that also show synthetic-generation
+indicators, and drafts a TAKE IT DOWN Act takedown request.
+
+Operates only on URLs the user provides. There is no autonomous crawl.
 """
 
 import argparse
 import hashlib
 import json
-import os
-import struct
+import logging
 import sys
-import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
+from io import BytesIO
 from pathlib import Path
-from typing import Optional
 from urllib.parse import urljoin, urlparse
+
+import imagehash
+import requests
+from bs4 import BeautifulSoup
+from PIL import Image
+
+logger = logging.getLogger(__name__)
+
+USER_AGENT = "AthenaMonitor/0.1 (+https://github.com/maisymylod/athena-ai)"
+REQUEST_TIMEOUT = 15  # seconds
 
 
 class ScanResult(Enum):
@@ -29,31 +40,24 @@ class ScanResult(Enum):
 @dataclass
 class ImageFingerprint:
     """Perceptual hash fingerprint of an image."""
+
     url: str
-    phash: int
+    phash: imagehash.ImageHash
     file_hash: str
     width: int = 0
     height: int = 0
     metadata: dict = field(default_factory=dict)
 
-    def hamming_distance(self, other: 'ImageFingerprint') -> int:
-        """Compute Hamming distance between two perceptual hashes."""
-        xor = self.phash ^ other.phash
-        distance = 0
-        while xor:
-            distance += xor & 1
-            xor >>= 1
-        return distance
+    def hamming_distance(self, other: "ImageFingerprint") -> int:
+        return self.phash - other.phash
 
-    def similarity(self, other: 'ImageFingerprint') -> float:
-        """Compute similarity score (0.0 to 1.0) based on perceptual hash."""
-        distance = self.hamming_distance(other)
-        return 1.0 - (distance / 64.0)
+    def similarity(self, other: "ImageFingerprint") -> float:
+        """Similarity score in [0, 1]. 64-bit phash → max distance 64."""
+        return 1.0 - (self.hamming_distance(other) / 64.0)
 
 
 @dataclass
 class ScanMatch:
-    """A detected match between a found image and a reference."""
     source_url: str
     reference_path: str
     similarity: float
@@ -62,88 +66,26 @@ class ScanMatch:
     synthetic_indicators: list = field(default_factory=list)
 
 
-class PerceptualHasher:
-    """Compute DCT-based perceptual hashes for images.
+def fingerprint_image(image_bytes: bytes, source_url: str) -> ImageFingerprint:
+    """Compute the perceptual hash + SHA256 of an image."""
+    img = Image.open(BytesIO(image_bytes)).convert("RGB")
+    return ImageFingerprint(
+        url=source_url,
+        phash=imagehash.phash(img),
+        file_hash=hashlib.sha256(image_bytes).hexdigest(),
+        width=img.width,
+        height=img.height,
+    )
 
-    Uses a simplified DCT approach that produces a 64-bit hash
-    robust to resizing, compression, and minor edits.
-    """
 
-    HASH_SIZE = 8  # 8x8 = 64-bit hash
-
-    @staticmethod
-    def _dct_2d(matrix: list[list[float]]) -> list[list[float]]:
-        """Compute 2D Discrete Cosine Transform."""
-        n = len(matrix)
-        result = [[0.0] * n for _ in range(n)]
-
-        for u in range(n):
-            for v in range(n):
-                total = 0.0
-                for x in range(n):
-                    for y in range(n):
-                        total += (
-                            matrix[x][y]
-                            * math.cos(math.pi * u * (2 * x + 1) / (2 * n))
-                            * math.cos(math.pi * v * (2 * y + 1) / (2 * n))
-                        )
-
-                cu = (1 / math.sqrt(n)) if u == 0 else math.sqrt(2 / n)
-                cv = (1 / math.sqrt(n)) if v == 0 else math.sqrt(2 / n)
-                result[u][v] = cu * cv * total
-
-        return result
-
-    @classmethod
-    def compute_hash(cls, pixels: list[list[float]]) -> int:
-        """Compute perceptual hash from a grayscale pixel matrix.
-
-        Args:
-            pixels: 2D list of grayscale values (0.0 - 255.0),
-                    should be resized to 32x32.
-
-        Returns:
-            64-bit perceptual hash as an integer.
-        """
-        dct = cls._dct_2d(pixels)
-
-        # Take top-left 8x8 of DCT (low frequencies)
-        low_freq = []
-        for i in range(cls.HASH_SIZE):
-            for j in range(cls.HASH_SIZE):
-                low_freq.append(dct[i][j])
-
-        # Compute median
-        sorted_freq = sorted(low_freq)
-        median = sorted_freq[len(sorted_freq) // 2]
-
-        # Generate hash: 1 if above median, 0 if below
-        phash = 0
-        for val in low_freq:
-            phash = (phash << 1) | (1 if val > median else 0)
-
-        return phash
-
-    @staticmethod
-    def hash_to_hex(phash: int) -> str:
-        """Convert a 64-bit hash to hex string."""
-        return f"{phash:016x}"
-
-    @staticmethod
-    def hex_to_hash(hex_str: str) -> int:
-        """Convert hex string back to hash integer."""
-        return int(hex_str, 16)
+def fingerprint_path(path: Path) -> ImageFingerprint:
+    """Compute the perceptual hash of a local image file."""
+    return fingerprint_image(path.read_bytes(), str(path))
 
 
 class SyntheticDetector:
-    """Analyze images for synthetic generation indicators.
+    """Synthetic-generation analysis: ML model when available, plus metadata heuristics."""
 
-    Uses a trained ML model as the primary detector, with metadata
-    heuristics as supplementary signals. Falls back to heuristics-only
-    if no trained model is available.
-    """
-
-    # Known AI generation tool signatures in EXIF/metadata
     SYNTHETIC_SIGNATURES = [
         "stable diffusion",
         "midjourney",
@@ -157,110 +99,92 @@ class SyntheticDetector:
         "tensor.art",
     ]
 
-    # Suspicious metadata patterns
-    SUSPICIOUS_SOFTWARE = [
-        "python",  # PIL/Pillow generation
-        "pytorch",
-        "tensorflow",
-    ]
+    SUSPICIOUS_SOFTWARE = ["python", "pytorch", "tensorflow"]
 
     _ml_inference = None
     _ml_load_attempted = False
 
     @classmethod
     def _get_ml_inference(cls):
-        """Lazy-load the ML inference model. Returns None if unavailable."""
         if cls._ml_load_attempted:
             return cls._ml_inference
 
         cls._ml_load_attempted = True
         try:
             from ml.inference import DeepfakeInference
+
             checkpoint_path = Path("checkpoints/best_model.pt")
             if checkpoint_path.exists():
                 cls._ml_inference = DeepfakeInference.from_checkpoint(checkpoint_path)
-        except Exception:
-            pass  # ML model not available — fall back to heuristics
+        except Exception as exc:
+            logger.debug("ML model unavailable: %s", exc)
 
         return cls._ml_inference
 
     @classmethod
-    def analyze(cls, metadata: dict, image_path: str | None = None) -> tuple[bool, list[str]]:
-        """Analyze an image for synthetic generation indicators.
+    def analyze(
+        cls, metadata: dict, image_path: str | None = None
+    ) -> tuple[bool, list[str]]:
+        indicators: list[str] = []
+        ml_result: bool | None = None
 
-        Uses the ML model as the primary signal when available, with
-        metadata heuristics as supplementary indicators. Falls back to
-        heuristics-only if no trained model is loaded.
-
-        Args:
-            metadata: Dict of image metadata (EXIF, XMP, etc.)
-            image_path: Optional path to the image file for ML inference.
-
-        Returns:
-            Tuple of (is_synthetic, list of indicators found)
-        """
-        indicators = []
-        ml_result = None
-
-        # Primary: ML model inference
         if image_path:
             inference = cls._get_ml_inference()
             if inference:
                 try:
-                    is_synthetic_ml, confidence, ml_indicators = inference.predict(image_path)
+                    is_synthetic_ml, _confidence, ml_indicators = inference.predict(
+                        image_path
+                    )
                     indicators.extend(ml_indicators)
                     ml_result = is_synthetic_ml
-                except Exception:
-                    pass  # Fall through to heuristics
+                except Exception as exc:
+                    logger.debug("ML inference failed: %s", exc)
 
-        # Supplementary: Metadata heuristics
-        heuristic_indicators = cls._analyze_metadata(metadata)
-        indicators.extend(heuristic_indicators)
+        indicators.extend(cls._analyze_metadata(metadata))
 
-        # Decision: ML result is authoritative if available
         if ml_result is not None:
-            is_synthetic = ml_result
-        else:
-            is_synthetic = len(heuristic_indicators) >= 2
+            return ml_result, indicators
 
-        return is_synthetic, indicators
+        # Fallback: at least 2 metadata indicators required to flag synthetic.
+        return len(indicators) >= 2, indicators
 
     @classmethod
     def _analyze_metadata(cls, metadata: dict) -> list[str]:
-        """Analyze image metadata for synthetic generation indicators."""
-        indicators = []
+        indicators: list[str] = []
 
-        # Check software field
         software = str(metadata.get("software", "")).lower()
         for sig in cls.SYNTHETIC_SIGNATURES:
             if sig in software:
                 indicators.append(f"AI tool signature: {sig}")
-
         for sus in cls.SUSPICIOUS_SOFTWARE:
             if sus in software:
                 indicators.append(f"Suspicious software: {sus}")
 
-        # Check for AI generation parameters in metadata
         params = str(metadata.get("parameters", "")).lower()
         usercomment = str(metadata.get("usercomment", "")).lower()
-
-        ai_params = ["cfg scale", "sampling steps", "sampler", "negative prompt",
-                      "lora", "checkpoint", "vae", "clip skip"]
+        ai_params = [
+            "cfg scale",
+            "sampling steps",
+            "sampler",
+            "negative prompt",
+            "lora",
+            "checkpoint",
+            "vae",
+            "clip skip",
+        ]
         for param in ai_params:
             if param in params or param in usercomment:
                 indicators.append(f"AI generation parameter: {param}")
 
-        # Check for C2PA provenance (content credentials)
         if "c2pa" in str(metadata).lower():
             indicators.append("C2PA content credential found")
 
-        # Check for unusual resolution patterns (common in AI generation)
         width = metadata.get("width", 0)
         height = metadata.get("height", 0)
-        if width and height:
-            # AI tools often generate at exact multiples of 64
-            if width % 64 == 0 and height % 64 == 0 and width >= 512:
-                indicators.append(f"Resolution {width}x{height} matches AI generation pattern")
+        if width and height and width % 64 == 0 and height % 64 == 0 and width >= 512:
+            indicators.append(
+                f"Resolution {width}x{height} matches AI generation pattern"
+            )
 
         return indicators
 
@@ -268,7 +192,7 @@ class SyntheticDetector:
 class TakedownGenerator:
     """Generate TAKE IT DOWN Act-compliant takedown requests."""
 
-    TEMPLATE = """
+    TEMPLATE = """\
 TAKEDOWN REQUEST — TAKE IT DOWN Act (S.146, 119th Congress)
 ============================================================
 Date:           {date}
@@ -295,20 +219,20 @@ imagery through automated detection. Under the TAKE IT DOWN Act,
 platforms must remove such content within 48 hours of notification.
 
 REQUEST:
-  1. Remove the identified content immediately
-  2. Prevent re-upload using the provided content hash
-  3. Preserve evidence for potential law enforcement referral
+  1. Remove the identified content immediately.
+  2. Prevent re-upload using the provided content hash.
+  3. Preserve evidence for potential law enforcement referral.
 
 ============================================================
-Generated by Athena — https://athena.ai
+Generated by Athena — https://github.com/maisymylod/athena-ai
 """
 
     @classmethod
     def generate(cls, match: ScanMatch) -> str:
-        """Generate a takedown request for a detected match."""
-        platform = urlparse(match.source_url).netloc
-        indicators = "\n".join(f"  - {ind}" for ind in match.synthetic_indicators)
-        if not indicators:
+        platform = urlparse(match.source_url).netloc or "(unknown)"
+        if match.synthetic_indicators:
+            indicators = "\n".join(f"  - {ind}" for ind in match.synthetic_indicators)
+        else:
             indicators = "  - Perceptual hash match with high confidence"
 
         return cls.TEMPLATE.format(
@@ -322,39 +246,104 @@ Generated by Athena — https://athena.ai
         )
 
 
+def fetch_bytes(url: str) -> bytes:
+    """Download URL contents. Raises requests.HTTPError on failure."""
+    resp = requests.get(
+        url, headers={"User-Agent": USER_AGENT}, timeout=REQUEST_TIMEOUT
+    )
+    resp.raise_for_status()
+    return resp.content
+
+
+def extract_image_urls(page_url: str, html: str) -> list[str]:
+    """Find <img src=...> URLs on a page and resolve them to absolute URLs."""
+    soup = BeautifulSoup(html, "html.parser")
+    urls: list[str] = []
+    for tag in soup.find_all("img"):
+        src = tag.get("src")
+        if not src:
+            continue
+        urls.append(urljoin(page_url, src))
+    return urls
+
+
 class WebScanner:
-    """Crawl web pages and extract images for analysis."""
+    """Scan user-supplied URLs (image URLs or pages) against a set of references.
+
+    There is no autonomous crawling. The caller hands in URLs to check.
+    """
 
     def __init__(self, reference_hashes: list[ImageFingerprint]):
         self.reference_hashes = reference_hashes
         self.matches: list[ScanMatch] = []
         self.scanned_urls: set[str] = set()
-        self.similarity_threshold = 0.75
+        self.similarity_threshold = 0.85  # 0.85 ≈ Hamming distance ≤ 9 / 64
 
-    def scan_url(self, url: str) -> list[ScanMatch]:
-        """Scan a URL for matching images.
+    def _check_image_against_refs(
+        self, image_url: str, image_bytes: bytes
+    ) -> ScanMatch | None:
+        try:
+            fp = fingerprint_image(image_bytes, image_url)
+        except Exception as exc:
+            logger.debug("Could not hash %s: %s", image_url, exc)
+            return None
 
-        In production, this would:
-        1. Fetch the page HTML
-        2. Extract all image URLs
-        3. Download and hash each image
-        4. Compare against reference hashes
-        """
-        print(f"  [*] Scanning: {url}")
-        self.scanned_urls.add(url)
-        # Production implementation would use requests + BeautifulSoup
-        return []
+        best_ref: ImageFingerprint | None = None
+        best_sim = 0.0
+        for ref in self.reference_hashes:
+            sim = fp.similarity(ref)
+            if sim > best_sim:
+                best_sim = sim
+                best_ref = ref
 
-    def scan_url_list(self, urls: list[str]) -> list[ScanMatch]:
-        """Scan multiple URLs."""
-        all_matches = []
-        for url in urls:
-            matches = self.scan_url(url)
-            all_matches.extend(matches)
-        return all_matches
+        if not best_ref or best_sim < self.similarity_threshold:
+            return None
+
+        is_synthetic, indicators = SyntheticDetector.analyze(
+            metadata={"width": fp.width, "height": fp.height}
+        )
+        return ScanMatch(
+            source_url=image_url,
+            reference_path=best_ref.url,
+            similarity=best_sim,
+            is_synthetic=is_synthetic,
+            scan_timestamp=datetime.now(timezone.utc).isoformat(),
+            synthetic_indicators=indicators,
+        )
+
+    def scan_image_url(self, image_url: str) -> ScanMatch | None:
+        """Download a single image URL and compare against references."""
+        self.scanned_urls.add(image_url)
+        try:
+            data = fetch_bytes(image_url)
+        except Exception as exc:
+            logger.warning("Skipping %s: %s", image_url, exc)
+            return None
+        match = self._check_image_against_refs(image_url, data)
+        if match:
+            self.matches.append(match)
+        return match
+
+    def scan_page(self, page_url: str) -> list[ScanMatch]:
+        """Download a page, extract <img> URLs, hash each, compare against references."""
+        self.scanned_urls.add(page_url)
+        try:
+            html = fetch_bytes(page_url).decode("utf-8", errors="replace")
+        except Exception as exc:
+            logger.warning("Could not fetch page %s: %s", page_url, exc)
+            return []
+
+        image_urls = extract_image_urls(page_url, html)
+        logger.info("Found %d images on %s", len(image_urls), page_url)
+
+        page_matches: list[ScanMatch] = []
+        for image_url in image_urls:
+            match = self.scan_image_url(image_url)
+            if match:
+                page_matches.append(match)
+        return page_matches
 
     def report(self) -> dict:
-        """Generate a scan report."""
         return {
             "scan_timestamp": datetime.now(timezone.utc).isoformat(),
             "urls_scanned": len(self.scanned_urls),
@@ -374,21 +363,12 @@ class WebScanner:
 
 
 def run_demo() -> None:
-    """Run a demonstration with synthetic test data."""
+    """Demo using synthetic test data — no network calls."""
     print("=" * 60)
-    print("  ATHENA IMAGE MONITOR — DEMO MODE")
-    print("  Protecting women & girls from deepfake abuse")
+    print("  ATHENA IMAGE MONITOR — DEMO (synthetic data)")
     print("=" * 60)
     print()
 
-    # Simulate reference hashes
-    ref = ImageFingerprint(
-        url="protected_user_ref_01.jpg",
-        phash=0xA3B1C2D4E5F60718,
-        file_hash="abc123",
-    )
-
-    # Simulate scan results
     demo_results = [
         ScanMatch(
             source_url="https://example-site.com/images/img_0847.jpg",
@@ -426,39 +406,57 @@ def run_demo() -> None:
     print("-" * 60)
 
     flagged = []
-    for result in demo_results:
-        if result.similarity >= 0.75 and result.is_synthetic:
-            status = "MATCH [SYNTHETIC]"
-            icon = "\U0001f6a8"
-            flagged.append(result)
-            print(f"  {icon} {status}")
-            print(f"    URL:        {result.source_url}")
-            print(f"    Similarity: {result.similarity:.0%}")
-            print(f"    Matched:    {result.reference_path}")
+    for r in demo_results:
+        if r.similarity >= 0.85 and r.is_synthetic:
+            flagged.append(r)
+            print(f"  [MATCH SYNTHETIC]  {r.source_url}")
+            print(f"    Similarity: {r.similarity:.0%}   Matched: {r.reference_path}")
         else:
-            print(f"  \u2713 Clear")
-            print(f"    URL:        {result.source_url}")
-            print(f"    Similarity: {result.similarity:.0%}")
+            print(f"  [clear]            {r.source_url}")
+            print(f"    Similarity: {r.similarity:.0%}")
         print()
 
     if flagged:
-        print(f"[*] Generating {len(flagged)} TAKE IT DOWN Act takedown request(s)...")
+        print(f"[*] Generating {len(flagged)} TAKE IT DOWN Act request(s)...")
         print()
         for match in flagged:
-            request = TakedownGenerator.generate(match)
-            print(request)
+            print(TakedownGenerator.generate(match))
 
 
-def main():
+def _enroll_references(ref_path: Path) -> list[ImageFingerprint]:
+    """Hash every image in a directory into perceptual-hash references."""
+    references: list[ImageFingerprint] = []
+    for img_file in sorted(ref_path.iterdir()):
+        if img_file.suffix.lower() not in (".jpg", ".jpeg", ".png", ".webp"):
+            continue
+        try:
+            references.append(fingerprint_path(img_file))
+            logger.info("Enrolled: %s", img_file.name)
+        except Exception as exc:
+            logger.warning("Could not enroll %s: %s", img_file, exc)
+    return references
+
+
+def main() -> None:
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s [%(name)s] %(levelname)s: %(message)s"
+    )
+
     parser = argparse.ArgumentParser(
-        description="Athena Image Monitor — Detect non-consensual AI imagery"
+        description="Athena Image Monitor — perceptual-hash matching for non-consensual imagery"
     )
     parser.add_argument("--demo", action="store_true", help="Run demo with synthetic data")
-    parser.add_argument("--refs", type=str, help="Path to reference photos directory")
-    parser.add_argument("--url", type=str, help="Single URL to scan")
-    parser.add_argument("--urls", type=str, help="File containing URLs to scan (one per line)")
-    parser.add_argument("--threshold", type=float, default=0.75, help="Similarity threshold (0-1)")
-    parser.add_argument("--output", type=str, help="Output report as JSON")
+    parser.add_argument(
+        "--refs", type=str, help="Directory of reference photos (one per protected person)"
+    )
+    parser.add_argument("--image-url", type=str, help="A single image URL to check")
+    parser.add_argument(
+        "--page-url", type=str, help="A web page URL — every <img> on the page is checked"
+    )
+    parser.add_argument(
+        "--threshold", type=float, default=0.85, help="Similarity threshold (0-1)"
+    )
+    parser.add_argument("--output", type=str, help="Write the JSON report to this path")
 
     args = parser.parse_args()
 
@@ -467,51 +465,31 @@ def main():
         return
 
     if not args.refs:
-        parser.error("--refs is required (or use --demo)")
+        parser.error("--refs <dir> is required (or use --demo)")
 
     ref_path = Path(args.refs)
-    if not ref_path.exists():
-        print(f"Error: Reference path {ref_path} does not exist")
+    if not ref_path.exists() or not ref_path.is_dir():
+        print(f"Error: reference path {ref_path} is not a directory", file=sys.stderr)
         sys.exit(1)
 
-    # Load reference images
-    print(f"[*] Loading reference images from {ref_path}")
-    references = []
-    for img_file in ref_path.glob("*"):
-        if img_file.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"):
-            fp = ImageFingerprint(
-                url=str(img_file),
-                phash=int(hashlib.md5(img_file.read_bytes()).hexdigest()[:16], 16),
-                file_hash=hashlib.sha256(img_file.read_bytes()).hexdigest(),
-            )
-            references.append(fp)
-            print(f"  Enrolled: {img_file.name}")
+    references = _enroll_references(ref_path)
+    print(f"[*] Enrolled {len(references)} reference image(s)")
 
-    print(f"[*] {len(references)} reference image(s) enrolled")
+    if not args.image_url and not args.page_url:
+        parser.error("Provide --image-url or --page-url to scan")
 
-    # Scan URLs
     scanner = WebScanner(references)
     scanner.similarity_threshold = args.threshold
 
-    urls = []
-    if args.url:
-        urls.append(args.url)
-    if args.urls:
-        with open(args.urls) as f:
-            urls.extend(line.strip() for line in f if line.strip())
+    if args.image_url:
+        scanner.scan_image_url(args.image_url)
+    if args.page_url:
+        scanner.scan_page(args.page_url)
 
-    if not urls:
-        parser.error("Provide --url or --urls to scan")
-
-    print(f"[*] Scanning {len(urls)} URL(s)...")
-    scanner.scan_url_list(urls)
-
-    # Output report
     report = scanner.report()
     if args.output:
-        with open(args.output, "w") as f:
-            json.dump(report, f, indent=2)
-        print(f"[*] Report saved to {args.output}")
+        Path(args.output).write_text(json.dumps(report, indent=2))
+        print(f"[*] Report written to {args.output}")
     else:
         print(json.dumps(report, indent=2))
 

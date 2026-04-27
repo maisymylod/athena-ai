@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.pytest_cache/
+*.egg-info/
+
+# ML artifacts (large; not source-of-truth in git)
+checkpoints/
+data/
+runs/
+logs/
+tensorboard/
+*.pt
+*.pth
+*.onnx
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Build artifacts
+*.tar.gz
+*.zip
+dist/
+build/
+
+# Secrets
+.env
+.env.*
+!.env.example
+kaggle.json
