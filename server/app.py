@@ -53,9 +53,31 @@ def create_app() -> Flask:
         response.headers["Access-Control-Allow-Headers"] = "Content-Type"
         return response
 
+    @app.route("/api/health")
+    def health():
+        checkpoint_path = os.environ.get(
+            "ATHENA_CHECKPOINT", "checkpoints/best_model.pt"
+        )
+        model_loaded = _inference is not None or Path(checkpoint_path).exists()
+        return jsonify(
+            {
+                "status": "ok",
+                "model_available": model_loaded,
+                "checkpoint_path": checkpoint_path,
+            }
+        )
+
     @app.route("/")
     def serve_index():
         return send_from_directory(str(project_root), "index.html")
+
+    @app.route("/static/<path:filename>")
+    def serve_static(filename: str):
+        return send_from_directory(str(project_root / "static"), filename)
+
+    @app.route("/api/detect", methods=["OPTIONS"])
+    def detect_options():
+        return ("", 204)
 
     @app.route("/api/detect", methods=["POST"])
     def detect():
@@ -83,8 +105,9 @@ def create_app() -> Flask:
             return (
                 jsonify(
                     {
-                        "error": "No trained model available. "
-                        "Train a model first with: python scripts/run_training.py"
+                        "error": "Model not yet available on this deployment. "
+                        "The classifier is being trained — see /api/health.",
+                        "model_available": False,
                     }
                 ),
                 503,

@@ -1,0 +1,16 @@
+.venv/
+.git/
+.github/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+data/
+runs/
+logs/
+tensorboard/
+node_modules/
+.DS_Store
+*.tar.gz
+*.zip
+.env
+.env.*
