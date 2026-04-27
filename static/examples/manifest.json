@@ -3,37 +3,37 @@
   "examples": [
     {
       "label": "Real photo 1",
-      "src": "/static/examples/real_1.jpg",
+      "src": "static/examples/real_1.jpg",
       "expected": "real",
       "credit": "Madushan996/real_fake_images, real/ split"
     },
     {
       "label": "Real photo 2",
-      "src": "/static/examples/real_2.jpg",
+      "src": "static/examples/real_2.jpg",
       "expected": "real",
       "credit": "Madushan996/real_fake_images, real/ split"
     },
     {
       "label": "Real photo 3",
-      "src": "/static/examples/real_3.jpg",
+      "src": "static/examples/real_3.jpg",
       "expected": "real",
       "credit": "Madushan996/real_fake_images, real/ split"
     },
     {
       "label": "AI-generated 1",
-      "src": "/static/examples/ai_1.jpg",
+      "src": "static/examples/ai_1.jpg",
       "expected": "synthetic",
       "credit": "Madushan996/real_fake_images, fake_fx/ (Flux)"
     },
     {
       "label": "AI-generated 2",
-      "src": "/static/examples/ai_2.jpg",
+      "src": "static/examples/ai_2.jpg",
       "expected": "synthetic",
       "credit": "Madushan996/real_fake_images, fake_sd/ (Stable Diffusion)"
     },
     {
       "label": "AI-generated 3",
-      "src": "/static/examples/ai_3.jpg",
+      "src": "static/examples/ai_3.jpg",
       "expected": "synthetic",
       "credit": "Madushan996/real_fake_images, fake_z/"
     }

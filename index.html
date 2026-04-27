@@ -1442,7 +1442,7 @@ platforms must remove such content within 48 hours of notification.
     <h2 class="section-title">Why this, and why me</h2>
     <p class="section-subtitle">A solo founder's pitch deserves a personal answer.</p>
     <div class="founder-card">
-      <img class="founder-avatar" src="/static/founder.jpg" alt="Maisy Mylod" width="120" height="120">
+      <img class="founder-avatar" src="static/founder.jpg" alt="Maisy Mylod" width="120" height="120">
       <div>
         <h3>Maisy Mylod</h3>
         <div class="founder-role">Founder · Athena</div>
@@ -1628,7 +1628,7 @@ platforms must remove such content within 48 hours of notification.
     // Try-with-these example images
     async function loadExamples() {
       try {
-        const resp = await fetch('/static/examples/manifest.json', { cache: 'no-store' });
+        const resp = await fetch('static/examples/manifest.json', { cache: 'no-store' });
         if (!resp.ok) return;
         const data = await resp.json();
         const row = document.getElementById('examples-row');
