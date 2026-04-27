@@ -411,28 +411,38 @@
     }
 
     /* ===== DETECT SECTION ===== */
-    .detect-section {
-      text-align: center;
+    .detect-section { text-align: center; }
+
+    .demo-shell {
+      max-width: 920px;
+      margin: 0 auto;
+      text-align: left;
     }
 
     .drop-zone {
       position: relative;
-      max-width: 560px;
-      margin: 0 auto;
-      padding: 64px 32px;
+      padding: 56px 32px;
       border: 2px dashed rgba(147, 51, 234, 0.35);
       border-radius: 20px;
       background: rgba(19, 17, 28, 0.6);
       backdrop-filter: blur(10px);
       cursor: pointer;
       transition: all 0.3s;
+      text-align: center;
     }
+
+    .drop-zone.hidden { display: none; }
 
     .drop-zone:hover,
     .drop-zone.drag-over {
       border-color: var(--purple-bright);
       background: rgba(147, 51, 234, 0.05);
       transform: translateY(-2px);
+    }
+
+    .drop-zone.drag-over .drop-zone-icon {
+      transform: scale(1.1);
+      background: rgba(147, 51, 234, 0.2);
     }
 
     .drop-zone-icon {
@@ -442,6 +452,7 @@
       background: rgba(147, 51, 234, 0.1);
       border: 1px solid rgba(147, 51, 234, 0.2);
       border-radius: 16px;
+      transition: transform 0.3s, background 0.3s;
     }
 
     .drop-zone h3 {
@@ -463,69 +474,185 @@
       cursor: pointer;
     }
 
-    .detect-result {
+    /* ===== DEMO CANVAS ===== */
+    .demo-canvas {
       display: none;
-      max-width: 560px;
-      margin: 24px auto 0;
-      padding: 24px 32px;
-      border-radius: 16px;
-      border: 1px solid var(--border);
+      grid-template-columns: 1fr 1.1fr;
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .demo-canvas.visible { display: grid; }
+
+    .demo-canvas-image,
+    .demo-canvas-result {
       background: var(--bg-card);
-      text-align: left;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      min-height: 360px;
+      display: flex;
+      flex-direction: column;
     }
 
-    .detect-result.visible { display: block; }
-
-    .detect-result-header {
-      display: flex; align-items: center; gap: 12px;
-      margin-bottom: 16px;
+    .demo-canvas-image img {
+      width: 100%;
+      max-height: 360px;
+      object-fit: contain;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.25);
     }
 
-    .detect-result-label {
-      font-weight: 600;
-      font-size: 1.05rem;
+    .demo-canvas-meta {
+      margin-top: 14px;
+      font-family: 'SF Mono', ui-monospace, monospace;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 4px 12px;
     }
 
-    .detect-result-label.synthetic { color: #F87171; }
-    .detect-result-label.real { color: #34D399; }
+    .demo-canvas-meta span.k { color: var(--purple-light); }
 
-    .detect-confidence-bar {
+    .demo-canvas-result {
+      padding: 24px 28px;
+      justify-content: flex-start;
+      gap: 14px;
+    }
+
+    /* Stages */
+    .demo-stages {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-top: 12px;
+    }
+
+    .demo-stage {
+      display: flex; align-items: center; gap: 14px;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      transition: color 0.3s;
+    }
+
+    .demo-stage-dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(192, 132, 252, 0.2);
+      flex: none;
+      transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .demo-stage.active {
+      color: var(--text-primary);
+    }
+
+    .demo-stage.active .demo-stage-dot {
+      background: var(--purple-light);
+      border-color: var(--purple-light);
+      box-shadow: 0 0 16px rgba(192, 132, 252, 0.6);
+      animation: stagePulse 1.2s ease-in-out infinite;
+    }
+
+    .demo-stage.done {
+      color: var(--text-secondary);
+    }
+
+    .demo-stage.done .demo-stage-dot {
+      background: var(--purple-bright);
+      border-color: var(--purple-bright);
+    }
+
+    @keyframes stagePulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.25); }
+    }
+
+    /* Verdict */
+    .demo-verdict-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: verdictIn 0.6s cubic-bezier(0.22, 0.7, 0.22, 1);
+    }
+
+    @keyframes verdictIn {
+      0%   { opacity: 0; transform: translateY(12px) scale(0.96); }
+      60%  { opacity: 1; }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .demo-verdict-label {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.6rem;
+      line-height: 1;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+
+    .demo-verdict-label.synthetic {
+      color: #F87171;
+      text-shadow: 0 0 36px rgba(248, 113, 113, 0.4);
+    }
+
+    .demo-verdict-label.real {
+      color: #34D399;
+      text-shadow: 0 0 36px rgba(52, 211, 153, 0.4);
+    }
+
+    .demo-verdict-confidence {
+      display: flex; align-items: baseline; gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .demo-verdict-confidence #demo-verdict-pct {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .demo-verdict-suffix {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .demo-verdict-bar {
       width: 100%;
       height: 8px;
-      background: rgba(255, 255, 255, 0.06);
+      background: rgba(255, 255, 255, 0.05);
       border-radius: 4px;
       overflow: hidden;
-      margin-bottom: 16px;
     }
 
-    .detect-confidence-fill {
+    .demo-verdict-bar-fill {
+      width: 0;
       height: 100%;
       border-radius: 4px;
-      transition: width 0.6s ease;
+      transition: width 1s cubic-bezier(0.22, 0.7, 0.22, 1);
     }
 
-    .detect-confidence-fill.synthetic {
-      background: linear-gradient(90deg, #F87171, #EF4444);
-    }
+    .demo-verdict-bar-fill.synthetic { background: linear-gradient(90deg, #F87171, #EF4444); }
+    .demo-verdict-bar-fill.real      { background: linear-gradient(90deg, #34D399, #10B981); }
 
-    .detect-confidence-fill.real {
-      background: linear-gradient(90deg, #34D399, #10B981);
-    }
-
-    .detect-indicators {
+    .demo-verdict-indicators {
       list-style: none;
       padding: 0;
+      margin: 4px 0 0;
     }
 
-    .detect-indicators li {
-      font-size: 0.85rem;
+    .demo-verdict-indicators li {
+      font-size: 0.86rem;
       color: var(--text-secondary);
-      padding: 4px 0;
-      padding-left: 16px;
+      padding: 4px 0 4px 18px;
       position: relative;
     }
 
-    .detect-indicators li::before {
+    .demo-verdict-indicators li::before {
       content: '';
       position: absolute;
       left: 0;
@@ -536,17 +663,34 @@
       background: var(--purple-light);
     }
 
-    .detect-loading {
-      display: none;
+    .demo-verdict-foot {
+      display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 12px;
-      padding: 24px;
-      color: var(--text-secondary);
-      font-size: 0.9rem;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+      font-family: 'SF Mono', ui-monospace, monospace;
+      font-size: 0.78rem;
+      color: var(--text-muted);
     }
 
-    .detect-loading.visible { display: flex; }
+    .demo-reset {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.82rem;
+      padding: 6px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .demo-reset:hover {
+      border-color: var(--purple-light);
+      background: rgba(147, 51, 234, 0.08);
+    }
 
     .spinner {
       width: 18px; height: 18px;
@@ -558,27 +702,8 @@
 
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .drop-zone-preview {
-      display: none;
-      max-width: 240px;
-      margin: 0 auto 16px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    }
-
-    .drop-zone-preview.visible { display: block; }
-
-    .drop-zone-preview img {
-      display: block;
-      width: 100%;
-      height: auto;
-    }
-
     .detect-error {
       display: none;
-      max-width: 560px;
       margin: 16px auto 0;
       padding: 16px 24px;
       border-radius: 12px;
@@ -589,6 +714,12 @@
     }
 
     .detect-error.visible { display: block; }
+
+    @media (max-width: 768px) {
+      .demo-canvas { grid-template-columns: 1fr; }
+      .demo-verdict-label { font-size: 2rem; }
+      .demo-canvas-image, .demo-canvas-result { min-height: 0; }
+    }
 
     .examples-row {
       max-width: 720px;
@@ -1248,36 +1379,6 @@
     </div>
   </section>
 
-  <!-- DETECT -->
-  <section class="detect-section" id="detect">
-    <div class="section-label">Try It Now</div>
-    <h2 class="section-title">Is this image AI-generated?</h2>
-    <p class="section-subtitle" style="margin: 0 auto 40px;">Drop an image below and Athena's ML model will analyze it for synthetic generation artifacts.</p>
-    <div class="drop-zone" id="drop-zone">
-      <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/bmp,image/tiff">
-      <div class="drop-zone-icon">
-        <svg width="24" height="24" fill="none" stroke="var(--purple-light)" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      </div>
-      <h3>Drag & drop an image here</h3>
-      <p>or click to browse, JPG, PNG, WebP (max 16 MB)</p>
-    </div>
-    <div class="drop-zone-preview" id="drop-zone-preview"><img id="drop-zone-preview-img" alt=""></div>
-    <div class="examples-label" style="margin-top: 24px;">Or try one of these</div>
-    <div class="examples-row" id="examples-row" aria-label="Try one of these example images"></div>
-    <div class="detect-loading" id="detect-loading"><span class="spinner"></span><span>Analyzing image...</span></div>
-    <div class="detect-error" id="detect-error"></div>
-    <div class="detect-result" id="detect-result">
-      <div class="detect-result-header">
-        <span class="detect-result-label" id="detect-label"></span>
-        <span style="color: var(--text-muted); font-size: 0.85rem;" id="detect-confidence-text"></span>
-      </div>
-      <div class="detect-confidence-bar">
-        <div class="detect-confidence-fill" id="detect-confidence-fill"></div>
-      </div>
-      <ul class="detect-indicators" id="detect-indicators"></ul>
-    </div>
-  </section>
-
   <!-- UNDER THE HOOD -->
   <section id="tech">
     <div class="section-label">Under the hood</div>
@@ -1391,6 +1492,61 @@
       <a class="repo-link" href="https://github.com/maisymylod/athena-ai/blob/main/ml/train.py">ml/train.py</a>
       <a class="repo-link" href="https://github.com/maisymylod/athena-ai/blob/main/server/app.py">server/app.py</a>
       <a class="repo-link" href="https://github.com/maisymylod/athena-ai">GitHub →</a>
+    </div>
+  </section>
+
+  <!-- DETECT -->
+  <section class="detect-section" id="detect">
+    <div class="section-label">Try it live</div>
+    <h2 class="section-title">Run the classifier yourself</h2>
+    <p class="section-subtitle" style="margin: 0 auto 40px;">Drop any image (your photo, a screenshot, an AI sample). The same checkpoint described above runs the inference, in real time, on this server.</p>
+
+    <div class="demo-shell">
+      <div class="drop-zone" id="drop-zone">
+        <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp,image/bmp,image/tiff">
+        <div class="drop-zone-icon">
+          <svg width="24" height="24" fill="none" stroke="var(--purple-light)" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <h3>Drag &amp; drop an image here</h3>
+        <p>or click to browse, JPG, PNG, WebP (max 16 MB)</p>
+      </div>
+
+      <div class="examples-label" style="margin-top: 24px;">Or try one of these</div>
+      <div class="examples-row" id="examples-row" aria-label="Try one of these example images"></div>
+
+      <div class="demo-canvas" id="demo-canvas">
+        <div class="demo-canvas-image">
+          <img id="demo-canvas-img" alt="Uploaded image">
+          <div class="demo-canvas-meta" id="demo-canvas-meta"></div>
+        </div>
+
+        <div class="demo-canvas-result" id="demo-canvas-result">
+          <div class="demo-stages" id="demo-stages">
+            <div class="demo-stage" data-stage="0"><span class="demo-stage-dot"></span><span class="demo-stage-label">Reading bytes</span></div>
+            <div class="demo-stage" data-stage="1"><span class="demo-stage-dot"></span><span class="demo-stage-label">Resize 224×224 + normalize</span></div>
+            <div class="demo-stage" data-stage="2"><span class="demo-stage-dot"></span><span class="demo-stage-label">EfficientNet-B0 forward pass</span></div>
+            <div class="demo-stage" data-stage="3"><span class="demo-stage-dot"></span><span class="demo-stage-label">Sigmoid → verdict</span></div>
+          </div>
+
+          <div class="demo-verdict-wrap" id="demo-verdict-wrap" hidden>
+            <div class="demo-verdict-label" id="demo-verdict-label"></div>
+            <div class="demo-verdict-confidence">
+              <span id="demo-verdict-pct">0%</span>
+              <span class="demo-verdict-suffix">confidence</span>
+            </div>
+            <div class="demo-verdict-bar">
+              <div class="demo-verdict-bar-fill" id="demo-verdict-fill"></div>
+            </div>
+            <ul class="demo-verdict-indicators" id="demo-verdict-indicators"></ul>
+            <div class="demo-verdict-foot">
+              <span id="demo-verdict-timing"></span>
+              <button type="button" class="demo-reset" id="demo-reset">Try another →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detect-error" id="detect-error"></div>
     </div>
   </section>
 
@@ -1531,54 +1687,136 @@ platforms must remove such content within 48 hours of notification.
       });
     }, { threshold: 0.1 });
 
-    // Drag-and-drop detection
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-input');
-    const loading = document.getElementById('detect-loading');
-    const errorEl = document.getElementById('detect-error');
-    const resultEl = document.getElementById('detect-result');
+    // ===== Demo canvas wiring =====
+    const dropZone     = document.getElementById('drop-zone');
+    const fileInput    = document.getElementById('file-input');
+    const errorEl      = document.getElementById('detect-error');
+    const canvas       = document.getElementById('demo-canvas');
+    const canvasImg    = document.getElementById('demo-canvas-img');
+    const canvasMeta   = document.getElementById('demo-canvas-meta');
+    const stagesEl     = document.getElementById('demo-stages');
+    const stageNodes   = stagesEl.querySelectorAll('.demo-stage');
+    const verdictWrap  = document.getElementById('demo-verdict-wrap');
+    const verdictLbl   = document.getElementById('demo-verdict-label');
+    const verdictPct   = document.getElementById('demo-verdict-pct');
+    const verdictFill  = document.getElementById('demo-verdict-fill');
+    const verdictInd   = document.getElementById('demo-verdict-indicators');
+    const verdictTime  = document.getElementById('demo-verdict-timing');
+    const resetBtn     = document.getElementById('demo-reset');
 
-    function hideResults() {
-      loading.classList.remove('visible');
+    function setStage(index, state) {
+      // state: 'active' | 'done'
+      stageNodes.forEach((n, i) => {
+        n.classList.remove('active', 'done');
+        if (state === 'active' && i === index) n.classList.add('active');
+        else if (i < index || (state === 'done' && i <= index)) n.classList.add('done');
+      });
+    }
+
+    function clearStages() {
+      stageNodes.forEach(n => n.classList.remove('active', 'done'));
+    }
+
+    function showCanvas() {
+      canvas.classList.add('visible');
+      stagesEl.style.display = '';
+      verdictWrap.hidden = true;
       errorEl.classList.remove('visible');
-      resultEl.classList.remove('visible');
+      dropZone.classList.add('hidden');
+    }
+
+    function resetDemo() {
+      canvas.classList.remove('visible');
+      stagesEl.style.display = '';
+      verdictWrap.hidden = true;
+      verdictFill.style.width = '0';
+      errorEl.classList.remove('visible');
+      dropZone.classList.remove('hidden');
+      clearStages();
+      if (canvasImg.src && canvasImg.src.startsWith('blob:')) URL.revokeObjectURL(canvasImg.src);
+      canvasImg.src = '';
+      canvasMeta.innerHTML = '';
+      fileInput.value = '';
     }
 
     function showError(msg) {
-      hideResults();
       errorEl.textContent = msg;
       errorEl.classList.add('visible');
     }
 
-    function showResult(data) {
-      hideResults();
-      const label = document.getElementById('detect-label');
-      const confText = document.getElementById('detect-confidence-text');
-      const confFill = document.getElementById('detect-confidence-fill');
-      const indicators = document.getElementById('detect-indicators');
+    function fmtBytes(n) {
+      if (n < 1024) return n + ' B';
+      if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+      return (n / 1024 / 1024).toFixed(2) + ' MB';
+    }
 
+    function paintMeta(file, dims) {
+      canvasMeta.innerHTML = '';
+      const rows = [
+        ['file',       file.name],
+        ['size',       fmtBytes(file.size)],
+        ['dimensions', dims ? (dims.w + ' × ' + dims.h) : '-'],
+        ['type',       file.type || '-'],
+      ];
+      rows.forEach(([k, v]) => {
+        const ks = document.createElement('span'); ks.className = 'k'; ks.textContent = k;
+        const vs = document.createElement('span'); vs.textContent = v;
+        canvasMeta.append(ks, vs);
+      });
+    }
+
+    function paintVerdict(data, latencyMs) {
       const isSynthetic = data.is_synthetic;
-      const confidence = Math.round(data.confidence * 100);
+      const confidence = Math.max(data.confidence, 1 - data.confidence); // confidence in the chosen class
+      const pct = Math.round(confidence * 100);
 
-      label.textContent = data.label;
-      label.className = 'detect-result-label ' + (isSynthetic ? 'synthetic' : 'real');
-      confText.textContent = confidence + '% confidence';
+      verdictLbl.textContent = isSynthetic ? 'AI-Generated' : 'Real';
+      verdictLbl.className = 'demo-verdict-label ' + (isSynthetic ? 'synthetic' : 'real');
 
-      confFill.style.width = confidence + '%';
-      confFill.className = 'detect-confidence-fill ' + (isSynthetic ? 'synthetic' : 'real');
+      verdictFill.className = 'demo-verdict-bar-fill ' + (isSynthetic ? 'synthetic' : 'real');
+      verdictPct.textContent = '0%';
+      verdictFill.style.width = '0';
 
-      indicators.innerHTML = '';
-      (data.indicators || []).forEach(function(ind) {
-        const li = document.createElement('li');
-        li.textContent = ind;
-        indicators.appendChild(li);
+      // Animate the percentage and bar fill together
+      requestAnimationFrame(() => {
+        verdictFill.style.width = pct + '%';
+        const start = performance.now();
+        const dur = 900;
+        function tick(now) {
+          const t = Math.min(1, (now - start) / dur);
+          const eased = 1 - Math.pow(1 - t, 3);
+          verdictPct.textContent = Math.round(pct * eased) + '%';
+          if (t < 1) requestAnimationFrame(tick);
+          else verdictPct.textContent = pct + '%';
+        }
+        requestAnimationFrame(tick);
       });
 
-      resultEl.classList.add('visible');
+      verdictInd.innerHTML = '';
+      (data.indicators || []).forEach(ind => {
+        const li = document.createElement('li');
+        li.textContent = ind;
+        verdictInd.appendChild(li);
+      });
+
+      verdictTime.textContent = 'analyzed in ' + Math.round(latencyMs) + ' ms · server-side inference';
+
+      stagesEl.style.display = 'none';
+      verdictWrap.hidden = false;
+    }
+
+    async function readDimensions(file) {
+      return new Promise(resolve => {
+        const url = URL.createObjectURL(file);
+        const im = new Image();
+        im.onload = () => { resolve({ w: im.naturalWidth, h: im.naturalHeight }); URL.revokeObjectURL(url); };
+        im.onerror = () => { resolve(null); URL.revokeObjectURL(url); };
+        im.src = url;
+      });
     }
 
     async function analyzeFile(file) {
-      if (!file || !file.type.startsWith('image/')) {
+      if (!file || !file.type || !file.type.startsWith('image/')) {
         showError('Please select a valid image file.');
         return;
       }
@@ -1587,20 +1825,40 @@ platforms must remove such content within 48 hours of notification.
         return;
       }
 
-      hideResults();
-      loading.classList.add('visible');
+      showCanvas();
+      canvasImg.src = URL.createObjectURL(file);
+      paintMeta(file, null);
+
+      // Visual stages: even though the server is fast, we choreograph the
+      // four pipeline stages so a viewer can follow what's happening.
+      clearStages();
+      setStage(0, 'active');
+      const stageDelays = [180, 220, 260];   // small delays between user-facing stages
+
+      const dims = await readDimensions(file);
+      paintMeta(file, dims);
+
+      await new Promise(r => setTimeout(r, stageDelays[0]));
+      setStage(1, 'active');
+      await new Promise(r => setTimeout(r, stageDelays[1]));
+      setStage(2, 'active');
 
       const formData = new FormData();
       formData.append('image', file);
-
+      const t0 = performance.now();
       try {
-        const resp = await fetch('/api/detect', { method: 'POST', body: formData });
+        const resp = await fetch('api/detect', { method: 'POST', body: formData });
         const data = await resp.json();
+        const latency = performance.now() - t0;
         if (!resp.ok) {
+          setStage(2, 'done');
           showError(data.error || 'Detection failed. Please try again.');
           return;
         }
-        showResult(data);
+        setStage(3, 'active');
+        await new Promise(r => setTimeout(r, stageDelays[2]));
+        setStage(3, 'done');
+        paintVerdict(data, latency);
       } catch (err) {
         showError('Could not connect to the detection server.');
       }
@@ -1624,6 +1882,8 @@ platforms must remove such content within 48 hours of notification.
     fileInput.addEventListener('change', function() {
       if (fileInput.files.length > 0) analyzeFile(fileInput.files[0]);
     });
+
+    resetBtn.addEventListener('click', resetDemo);
 
     // Try-with-these example images
     async function loadExamples() {
@@ -1727,19 +1987,6 @@ platforms must remove such content within 48 hours of notification.
       });
     }, { threshold: 0.3 });
     document.querySelectorAll('.robustness').forEach(el => barObserver.observe(el));
-
-    // Drop-zone live preview after a file is selected
-    const dropPreview = document.getElementById('drop-zone-preview');
-    const dropPreviewImg = document.getElementById('drop-zone-preview-img');
-    const _origAnalyze = analyzeFile;
-    analyzeFile = function(file) {
-      if (file && file.type && file.type.startsWith('image/')) {
-        const url = URL.createObjectURL(file);
-        dropPreviewImg.src = url;
-        dropPreview.classList.add('visible');
-      }
-      return _origAnalyze(file);
-    };
 
     // Tech-card mouse-tracked glow
     document.querySelectorAll('.tech-card').forEach(card => {
