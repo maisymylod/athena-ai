@@ -1,8 +1,10 @@
 # Athena
 
-**Detect AI-generated non-consensual intimate imagery, prove it's synthetic, and get it removed under the [TAKE IT DOWN Act](https://www.congress.gov/bill/119th-congress/senate-bill/146).**
+**The first AI-native consumer protection service for non-consensual deepfakes.**
 
 [![CI](https://github.com/maisymylod/athena-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/maisymylod/athena-ai/actions/workflows/ci.yml)
+
+The existing alternative is a reputation-management lawyer at **$5,000/month**. Athena does it for **$20/month**, because an agent does end-to-end what a legal team used to do — monitor the open and dark web, verify the image is synthetic, draft and file the takedown under the [TAKE IT DOWN Act](https://www.congress.gov/bill/119th-congress/senate-bill/146), and follow up until the content is removed.
 
 96% of deepfakes are non-consensual pornography. 99% of victims are women. Zero consumer tools exist to fight back. Athena is what changes that.
 
