@@ -1847,7 +1847,10 @@ platforms must remove such content within 48 hours of notification.
       formData.append('image', file);
       const t0 = performance.now();
       try {
-        const resp = await fetch('api/detect', { method: 'POST', body: formData });
+        const HOSTED_API = 'https://mymaisy-athena-detect.hf.space';
+        const apiBase = (location.protocol === 'file:' || location.hostname.endsWith('github.io'))
+          ? HOSTED_API : '';
+        const resp = await fetch(apiBase + '/api/detect', { method: 'POST', body: formData });
         const data = await resp.json();
         const latency = performance.now() - t0;
         if (!resp.ok) {
