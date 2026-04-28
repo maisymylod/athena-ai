@@ -6,7 +6,7 @@
 
 96% of deepfakes are non-consensual pornography. 99% of victims are women. Zero consumer tools exist to fight back. Athena is what changes that.
 
-- **Live demo:** _coming soon — `athena-demo.fly.dev`_
+- **Live demo:** [**mymaisy-athena-detect.hf.space**](https://mymaisy-athena-detect.hf.space/) — drag in any image, get a verdict in ~150ms
 - **Detector evaluation:** [`EVAL.md`](EVAL.md)
 - **Model card:** [`MODEL_CARD.md`](MODEL_CARD.md)
 
